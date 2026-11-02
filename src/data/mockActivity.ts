@@ -1,0 +1,77 @@
+import type { Activity } from '../types/index.ts'
+import { hoursAgo } from './time.ts'
+
+export const mockActivity: Activity[] = [
+  {
+    id: 'act-1',
+    workspaceId: 'ws-aivibe',
+    actorId: 'jordan',
+    kind: 'created',
+    message: 'новая задача «Собрать боковое меню» в проекте «Разработка AivibeBoard».',
+    timestamp: hoursAgo(2),
+  },
+  {
+    id: 'act-2',
+    workspaceId: 'ws-aivibe',
+    actorId: 'sam',
+    kind: 'comment',
+    message: 'комментарий к структуре страницы запуска.',
+    timestamp: hoursAgo(3),
+  },
+  {
+    id: 'act-3',
+    workspaceId: 'ws-aivibe',
+    actorId: 'alex',
+    kind: 'status',
+    message: 'статус «Проверить пайплайн загрузки медиа» изменён на «В работе».',
+    timestamp: hoursAgo(5),
+  },
+  {
+    id: 'act-4',
+    workspaceId: 'ws-aivibe',
+    actorId: 'maya',
+    kind: 'completed',
+    message: 'задача «Выбрать акцентный цвет» завершена.',
+    timestamp: hoursAgo(20),
+  },
+  {
+    id: 'act-5',
+    workspaceId: 'ws-aivibe',
+    actorId: 'lena',
+    kind: 'member',
+    message: 'Джордан Блейк добавлен в проект «Платформа Medialog AI».',
+    timestamp: hoursAgo(26),
+  },
+  {
+    id: 'act-6',
+    workspaceId: 'ws-aivibe',
+    actorId: 'priya',
+    kind: 'created',
+    message: 'новая задача «Проверить пайплайн загрузки медиа» в проекте «Платформа Medialog AI».',
+    timestamp: hoursAgo(30),
+  },
+  {
+    id: 'act-7',
+    workspaceId: 'ws-northwind',
+    actorId: 'sam',
+    kind: 'comment',
+    message: 'комментарий к первому экрану сайта.',
+    timestamp: hoursAgo(4),
+  },
+  {
+    id: 'act-8',
+    workspaceId: 'ws-northwind',
+    actorId: 'jordan',
+    kind: 'status',
+    message: 'статус «Проверить навигацию клиентского портала» изменён на «В работе».',
+    timestamp: hoursAgo(8),
+  },
+  {
+    id: 'act-9',
+    workspaceId: 'ws-northwind',
+    actorId: 'alex',
+    kind: 'created',
+    message: 'новая задача «Собрать обратную связь заказчика» в проекте «Обновление клиентского портала».',
+    timestamp: hoursAgo(28),
+  },
+]

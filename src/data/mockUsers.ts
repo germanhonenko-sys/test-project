@@ -1,0 +1,58 @@
+import type { User } from '../types/index.ts'
+
+export const mockUsers: User[] = [
+  {
+    id: 'alex',
+    name: 'Алексей Морозов',
+    role: 'Руководитель продукта',
+    email: 'alex@aivibe.io',
+    initials: 'АМ',
+    color: 'bg-indigo-600',
+    workspaceIds: ['ws-aivibe', 'ws-northwind'],
+  },
+  {
+    id: 'maya',
+    name: 'Майя Чен',
+    role: 'Продуктовый дизайнер',
+    email: 'maya@aivibe.io',
+    initials: 'МЧ',
+    color: 'bg-violet-600',
+    workspaceIds: ['ws-aivibe'],
+  },
+  {
+    id: 'jordan',
+    name: 'Джордан Блейк',
+    role: 'Фронтенд-разработчик',
+    email: 'jordan@aivibe.io',
+    initials: 'ДБ',
+    color: 'bg-sky-600',
+    workspaceIds: ['ws-aivibe', 'ws-northwind'],
+  },
+  {
+    id: 'priya',
+    name: 'Прия Шах',
+    role: 'Бэкенд-разработчик',
+    email: 'priya@aivibe.io',
+    initials: 'ПШ',
+    color: 'bg-emerald-600',
+    workspaceIds: ['ws-aivibe'],
+  },
+  {
+    id: 'sam',
+    name: 'Сэм Оконкво',
+    role: 'Руководитель маркетинга',
+    email: 'sam@aivibe.io',
+    initials: 'СО',
+    color: 'bg-amber-600',
+    workspaceIds: ['ws-aivibe', 'ws-northwind'],
+  },
+  {
+    id: 'lena',
+    name: 'Лена Фогель',
+    role: 'Менеджер проектов',
+    email: 'lena@aivibe.io',
+    initials: 'ЛФ',
+    color: 'bg-rose-600',
+    workspaceIds: ['ws-aivibe'],
+  },
+]
