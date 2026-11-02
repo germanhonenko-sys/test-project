@@ -1,10 +1,11 @@
-import { Check, ChevronsUpDown, Sparkles } from 'lucide-react'
+import { Check, ChevronsUpDown, LogOut, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Avatar } from '../ui/Avatar.tsx'
 import { useMediaQuery } from '../../hooks/useMediaQuery.ts'
 import { useOnOutside } from '../../hooks/useOnOutside.ts'
 import { useWorkspaceData } from '../../hooks/useWorkspaceData.ts'
+import { useAuthStore } from '../../store/useAuthStore.ts'
 import { useAppStore } from '../../store/useAppStore.ts'
 import { cn } from '../../utils/cn.ts'
 import { aiNav, isNavActive, mainNav, systemNav, type NavItem } from './navigation.ts'
@@ -44,6 +45,7 @@ export function Sidebar() {
   const setSidebarOpen = useAppStore((state) => state.setSidebarOpen)
   const workspaces = useAppStore((state) => state.workspaces)
   const setActiveWorkspace = useAppStore((state) => state.setActiveWorkspace)
+  const logout = useAuthStore((state) => state.logout)
   const { workspace, currentUser } = useWorkspaceData()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useOnOutside<HTMLDivElement>(menuOpen, () => setMenuOpen(false))
@@ -144,6 +146,17 @@ export function Sidebar() {
         >
           Профиль
         </Link>
+        <button
+          type="button"
+          onClick={() => {
+            setSidebarOpen(false)
+            logout()
+          }}
+          className="mt-2 flex h-8 w-full items-center justify-center gap-1.5 rounded-lg text-xs font-medium text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          Выйти
+        </button>
       </div>
     </aside>
   )
