@@ -22,7 +22,6 @@ import type {
   Workspace,
 } from '../types/index.ts'
 import { DEFAULT_AI_PROMPT, generateSubtasks } from '../utils/ai.ts'
-import { mergeUsers, readAccounts, readSession, writeSession } from '../utils/auth.ts'
 
 function createId(prefix: string) {
   return `${prefix}-${crypto.randomUUID().slice(0, 8)}`
@@ -59,15 +58,6 @@ interface AppState {
 }
 
 const initialWorkspace = mockWorkspaces[0]
-const initialUsers = mergeUsers(
-  mockUsers,
-  readAccounts().map((account) => account.user),
-)
-const restoredSession = readSession()
-const initialUserId =
-  restoredSession && initialUsers.some((user) => user.id === restoredSession.userId) ? restoredSession.userId : ''
-
-if (restoredSession && !initialUserId) writeSession(null)
 
 function activityEntry(
   workspaceId: string,
@@ -86,12 +76,12 @@ function activityEntry(
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
-  currentUserId: initialUserId,
+  currentUserId: '',
   workspaces: mockWorkspaces,
   activeWorkspaceId: initialWorkspace?.id ?? 'ws-aivibe',
   projects: mockProjects,
   tasks: mockTasks,
-  users: initialUsers,
+  users: mockUsers,
   activity: mockActivity,
   documents: mockDocuments,
   notifications: mockNotifications,

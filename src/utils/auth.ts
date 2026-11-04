@@ -1,8 +1,3 @@
-import type { User } from '../types/index.ts'
-
-const SESSION_KEY = 'aivibe-auth-session'
-const ACCOUNTS_KEY = 'aivibe-registered-accounts'
-
 export const MIN_PASSWORD_LENGTH = 6
 
 const avatarColors = [
@@ -13,16 +8,6 @@ const avatarColors = [
   'bg-amber-600',
   'bg-rose-600',
 ] as const
-
-export interface AuthSession {
-  userId: string
-}
-
-export interface RegisteredAccount {
-  email: string
-  password: string
-  user: User
-}
 
 export function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
@@ -57,75 +42,41 @@ export function nextPathFromState(state: unknown) {
   return `${pathname}${from.search ?? ''}${from.hash ?? ''}`
 }
 
-function readJson(key: string): unknown {
-  try {
-    const raw = localStorage.getItem(key)
-    if (!raw) return null
-    return JSON.parse(raw) as unknown
-  } catch {
-    return null
+export function authErrorMessage(error: { message: string; code?: string }) {
+  const message = error.message.toLowerCase()
+  const code = error.code ?? ''
+
+  if (code === 'invalid_credentials' || message.includes('invalid login credentials')) {
+    return 'Неверная почта или пароль.'
   }
-}
-
-function writeJson(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value))
-  } catch {
-    // Демо-хранилище недоступно в приватном режиме.
+  if (
+    code === 'email_exists' ||
+    code === 'user_already_exists' ||
+    message.includes('already registered') ||
+    message.includes('already been registered')
+  ) {
+    return 'Эта почта уже зарегистрирована.'
   }
-}
-
-function isUser(value: unknown): value is User {
-  if (!value || typeof value !== 'object') return false
-  const user = value as Partial<User>
-  return (
-    typeof user.id === 'string' &&
-    typeof user.name === 'string' &&
-    typeof user.role === 'string' &&
-    typeof user.email === 'string' &&
-    typeof user.initials === 'string' &&
-    typeof user.color === 'string' &&
-    Array.isArray(user.workspaceIds) &&
-    user.workspaceIds.every((id) => typeof id === 'string')
-  )
-}
-
-export function readSession(): AuthSession | null {
-  const parsed = readJson(SESSION_KEY)
-  if (!parsed || typeof parsed !== 'object') return null
-  const userId = (parsed as { userId?: unknown }).userId
-  return typeof userId === 'string' && userId ? { userId } : null
-}
-
-export function writeSession(session: AuthSession | null) {
-  try {
-    if (!session) localStorage.removeItem(SESSION_KEY)
-    else writeJson(SESSION_KEY, session)
-  } catch {
-    // Демо-хранилище недоступно в приватном режиме.
+  if (code === 'email_not_confirmed' || message.includes('email not confirmed')) {
+    return 'Подтвердите почту по ссылке из письма, затем войдите.'
   }
-}
-
-export function readAccounts(): RegisteredAccount[] {
-  const parsed = readJson(ACCOUNTS_KEY)
-  if (!Array.isArray(parsed)) return []
-  return parsed.flatMap((item) => {
-    if (!item || typeof item !== 'object') return []
-    const account = item as Partial<RegisteredAccount>
-    if (typeof account.email !== 'string' || typeof account.password !== 'string' || !isUser(account.user)) {
-      return []
-    }
-    return [{ email: normalizeEmail(account.email), password: account.password, user: account.user }]
-  })
-}
-
-export function writeAccounts(accounts: RegisteredAccount[]) {
-  writeJson(ACCOUNTS_KEY, accounts)
-}
-
-export function mergeUsers(base: User[], extra: User[]) {
-  const ids = new Set(base.map((user) => user.id))
-  const emails = new Set(base.map((user) => normalizeEmail(user.email)))
-  const additions = extra.filter((user) => !ids.has(user.id) && !emails.has(normalizeEmail(user.email)))
-  return [...base, ...additions]
+  if (
+    code === 'over_email_send_rate_limit' ||
+    code === 'over_request_rate_limit' ||
+    message.includes('rate limit')
+  ) {
+    return 'Слишком много попыток подряд. Подождите немного и повторите.'
+  }
+  if (message.includes('password') && (message.includes('at least') || message.includes('short') || message.includes('6'))) {
+    return `Пароль должен быть не короче ${MIN_PASSWORD_LENGTH} символов.`
+  }
+  if (
+    code === 'email_address_invalid' ||
+    message.includes('invalid format') ||
+    message.includes('unable to validate email') ||
+    (message.includes('email address') && message.includes('invalid'))
+  ) {
+    return 'Укажите корректную почту.'
+  }
+  return 'Не удалось выполнить запрос. Попробуйте ещё раз.'
 }

@@ -21,6 +21,7 @@ export function AuthPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [pending, setPending] = useState(false)
 
   useEffect(() => {
     document.title = mode === 'login' ? 'Вход · AivibeBoard' : 'Регистрация · AivibeBoard'
@@ -36,9 +37,12 @@ export function AuthPage() {
     navigate(nextPathFromState(location.state), { replace: true })
   }
 
-  function onLogin(event: FormEvent<HTMLFormElement>) {
+  async function onLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const message = login(email, password)
+    setPending(true)
+    setError(null)
+    const message = await login(email, password)
+    setPending(false)
     if (message) {
       setError(message)
       return
@@ -46,13 +50,16 @@ export function AuthPage() {
     finish()
   }
 
-  function onRegister(event: FormEvent<HTMLFormElement>) {
+  async function onRegister(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (password !== confirmPassword) {
       setError('Пароли не совпадают.')
       return
     }
-    const message = register(name, email, password)
+    setPending(true)
+    setError(null)
+    const message = await register(name, email, password)
+    setPending(false)
     if (message) {
       setError(message)
       return
@@ -73,10 +80,10 @@ export function AuthPage() {
 
         <Card className="p-5 sm:p-6">
           <div className="grid grid-cols-2 rounded-lg bg-zinc-100 p-1" role="tablist" aria-label="Способ входа">
-            <ModeTab active={mode === 'login'} onClick={() => switchMode('login')}>
+            <ModeTab active={mode === 'login'} onClick={() => switchMode('login')} disabled={pending}>
               Вход
             </ModeTab>
-            <ModeTab active={mode === 'register'} onClick={() => switchMode('register')}>
+            <ModeTab active={mode === 'register'} onClick={() => switchMode('register')} disabled={pending}>
               Регистрация
             </ModeTab>
           </div>
@@ -106,13 +113,11 @@ export function AuthPage() {
                 />
               </Field>
               {error ? <FormError message={error} /> : null}
-              <Button type="submit" className="w-full">
-                Войти
+              <Button type="submit" className="w-full" disabled={pending}>
+                {pending ? 'Входим…' : 'Войти'}
               </Button>
               <p className="text-xs leading-5 text-zinc-500">
-                Демо без сервера. Для участника команды, например{' '}
-                <span className="font-medium text-zinc-700">alex@aivibe.io</span>, подойдёт любой пароль от 6
-                символов.
+                Войдите с почтой и паролем, указанными при регистрации.
               </p>
             </form>
           ) : (
@@ -160,11 +165,11 @@ export function AuthPage() {
                 />
               </Field>
               {error ? <FormError message={error} /> : null}
-              <Button type="submit" className="w-full">
-                Создать аккаунт
+              <Button type="submit" className="w-full" disabled={pending}>
+                {pending ? 'Создаём…' : 'Создать аккаунт'}
               </Button>
               <p className="text-xs leading-5 text-zinc-500">
-                Аккаунт сохранится в этом браузере и сразу откроет приложение.
+                После создания аккаунта откроется главная страница.
               </p>
             </form>
           )}
@@ -177,10 +182,12 @@ export function AuthPage() {
 function ModeTab({
   active,
   onClick,
+  disabled,
   children,
 }: {
   active: boolean
   onClick: () => void
+  disabled?: boolean
   children: string
 }) {
   return (
@@ -189,8 +196,9 @@ function ModeTab({
       role="tab"
       aria-selected={active}
       onClick={onClick}
+      disabled={disabled}
       className={cn(
-        'h-8 rounded-md text-sm font-medium transition-colors',
+        'h-8 rounded-md text-sm font-medium transition-colors disabled:opacity-50',
         active ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-800',
       )}
     >
