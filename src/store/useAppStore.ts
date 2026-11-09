@@ -8,7 +8,6 @@ import { mockUsers } from '../data/mockUsers.ts'
 import { mockWorkspaces } from '../data/mockWorkspaces.ts'
 import type {
   Activity,
-  ActivityKind,
   AiHistoryItem,
   AppNotification,
   KnowledgeDocument,
@@ -21,13 +20,9 @@ import type {
   User,
   Workspace,
 } from '../types/index.ts'
-import { statusLabel } from '../i18n/labels.ts'
 import { both, loc } from '../i18n/text.ts'
 import { DEFAULT_AI_PROMPT, generateSubtasks } from '../utils/ai.ts'
-
-function createId(prefix: string) {
-  return `${prefix}-${crypto.randomUUID().slice(0, 8)}`
-}
+import { createId, taskCreatedActivity, taskStatusActivity } from './activity.ts'
 
 interface AppState {
   currentUserId: string
@@ -60,22 +55,6 @@ interface AppState {
 }
 
 const initialWorkspace = mockWorkspaces[0]
-
-function activityEntry(
-  workspaceId: string,
-  actorId: string,
-  kind: ActivityKind,
-  message: Activity['message'],
-): Activity {
-  return {
-    id: createId('activity'),
-    workspaceId,
-    actorId,
-    kind,
-    message,
-    timestamp: new Date().toISOString(),
-  }
-}
 
 export const useAppStore = create<AppState>((set, get) => ({
   currentUserId: '',
@@ -115,41 +94,16 @@ export const useAppStore = create<AppState>((set, get) => ({
       get().projects.find((project) => project.id === task.projectId)?.name ?? loc('проект', 'project')
     set((state) => ({
       tasks: [task, ...state.tasks],
-      activity: [
-        activityEntry(
-          task.workspaceId,
-          state.currentUserId,
-          'created',
-          loc(
-            `новая задача «${task.title.ru}» в проекте «${projectName.ru}».`,
-            `new task “${task.title.en}” in project “${projectName.en}”.`,
-          ),
-        ),
-        ...state.activity,
-      ],
+      activity: [taskCreatedActivity(task, projectName, state.currentUserId), ...state.activity],
       createTaskOpen: false,
     }))
   },
   setTaskStatus: (taskId, status) => {
     const current = get().tasks.find((task) => task.id === taskId)
     if (!current || current.status === status) return
-    const done = status === 'Готово'
     set((state) => ({
       tasks: state.tasks.map((task) => (task.id === taskId ? { ...task, status } : task)),
-      activity: [
-        activityEntry(
-          current.workspaceId,
-          state.currentUserId,
-          done ? 'completed' : 'status',
-          done
-            ? loc(`задача «${current.title.ru}» завершена.`, `task “${current.title.en}” completed.`)
-            : loc(
-                `статус задачи «${current.title.ru}» изменён на «${statusLabel(status, 'ru')}».`,
-                `task “${current.title.en}” status changed to “${statusLabel(status, 'en')}”.`,
-              ),
-        ),
-        ...state.activity,
-      ],
+      activity: [taskStatusActivity(current, status, state.currentUserId), ...state.activity],
     }))
   },
   addDocument: (input) => {

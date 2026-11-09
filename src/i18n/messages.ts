@@ -2,7 +2,7 @@ const ru = {
   appName: 'AivibeBoard',
   nav: {
     dashboard: 'Дашборд',
-    tasks: 'Мои задачи',
+    boards: 'Мои доски',
     projects: 'Проекты',
     team: 'Команда',
     knowledge: 'База знаний',
@@ -13,7 +13,7 @@ const ru = {
   },
   crumb: {
     overview: 'Обзор',
-    tasks: 'Задачи',
+    boards: 'Доски',
     projects: 'Проекты',
     team: 'Команда',
     knowledge: 'Знания',
@@ -81,12 +81,9 @@ const ru = {
     passwordMismatch: 'Пароли не совпадают.',
   },
   page: {
-    tasksDescription:
-      'Все назначения в этом пространстве. Смена статуса сохраняется в демо до обновления страницы.',
-    tasksMine: 'Мои',
-    tasksAll: 'Все задачи',
+    boardsDescription: 'Доска на каждый проект этого пространства и число задач в каждом статусе.',
+    boardsEmpty: 'В этом пространстве пока нет досок.',
     filterAll: 'Все',
-    tasksEmpty: 'Нет задач по этому фильтру.',
     projectsDescription: 'Текущие направления, прогресс и люди, которые их ведут.',
     teamDescription: 'Люди, которые работают в этом пространстве.',
     knowledgeDescription:
@@ -109,7 +106,7 @@ const ru = {
     projectOverviewHint: 'Активная и приостановленная работа в этом пространстве.',
     upcoming: 'Мои задачи',
     upcomingHint: 'Ближайшие задачи',
-    allTasks: 'Все задачи',
+    allBoards: 'Все доски',
     upcomingEmpty: 'Всё закрыто. Новые задачи появятся здесь.',
     activity: 'Недавняя активность',
     activityHint: 'Что команда изменила за последнее время.',
@@ -232,7 +229,7 @@ export const messages = {
     appName: 'AivibeBoard',
     nav: {
       dashboard: 'Dashboard',
-      tasks: 'My tasks',
+      boards: 'My boards',
       projects: 'Projects',
       team: 'Team',
       knowledge: 'Knowledge base',
@@ -243,7 +240,7 @@ export const messages = {
     },
     crumb: {
       overview: 'Overview',
-      tasks: 'Tasks',
+      boards: 'Boards',
       projects: 'Projects',
       team: 'Team',
       knowledge: 'Knowledge',
@@ -311,12 +308,9 @@ export const messages = {
       passwordMismatch: 'Passwords do not match.',
     },
     page: {
-      tasksDescription:
-        'Every assignment in this workspace. Status changes stay in the demo until you refresh.',
-      tasksMine: 'Mine',
-      tasksAll: 'All tasks',
+      boardsDescription: 'One board for each project in this workspace, with a task count for every status.',
+      boardsEmpty: 'This workspace has no boards yet.',
       filterAll: 'All',
-      tasksEmpty: 'No tasks match this filter.',
       projectsDescription: 'Current workstreams, progress, and the people leading them.',
       teamDescription: 'People working in this workspace.',
       knowledgeDescription: 'Documents the team looks up while planning. Uploads stay in this session.',
@@ -338,7 +332,7 @@ export const messages = {
       projectOverviewHint: 'Active and paused work in this workspace.',
       upcoming: 'My tasks',
       upcomingHint: 'Coming up next',
-      allTasks: 'All tasks',
+      allBoards: 'All boards',
       upcomingEmpty: 'Everything is done. New tasks will show up here.',
       activity: 'Recent activity',
       activityHint: 'What the team changed recently.',

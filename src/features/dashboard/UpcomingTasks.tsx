@@ -22,8 +22,8 @@ export function UpcomingTasks() {
           <h2 className="text-sm font-semibold text-zinc-900">{t('dash.upcoming')}</h2>
           <p className="text-xs text-zinc-500">{t('dash.upcomingHint')}</p>
         </div>
-        <ButtonLink to="/tasks" variant="ghost" size="sm">
-          {t('dash.allTasks')}
+        <ButtonLink to="/boards" variant="ghost" size="sm">
+          {t('dash.allBoards')}
         </ButtonLink>
       </div>
       <TaskList

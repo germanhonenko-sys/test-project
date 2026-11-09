@@ -1,8 +1,8 @@
 import {
   BookOpen,
   FolderKanban,
+  Kanban,
   LayoutDashboard,
-  ListTodo,
   Send,
   Settings,
   Sparkles,
@@ -21,7 +21,7 @@ export interface NavItem {
 
 export const mainNav: NavItem[] = [
   { labelKey: 'nav.dashboard', to: '/dashboard', icon: LayoutDashboard },
-  { labelKey: 'nav.tasks', to: '/tasks', icon: ListTodo },
+  { labelKey: 'nav.boards', to: '/boards', icon: Kanban },
   { labelKey: 'nav.projects', to: '/projects', icon: FolderKanban },
   { labelKey: 'nav.team', to: '/team', icon: Users },
   { labelKey: 'nav.knowledge', to: '/knowledge-base', icon: BookOpen },
@@ -49,7 +49,7 @@ export function sectionMeta(pathname: string, hash: string) {
   }
   const map: Record<string, { titleKey: MessageKey; crumbKey: MessageKey }> = {
     '/dashboard': { titleKey: 'nav.dashboard', crumbKey: 'crumb.overview' },
-    '/tasks': { titleKey: 'nav.tasks', crumbKey: 'crumb.tasks' },
+    '/boards': { titleKey: 'nav.boards', crumbKey: 'crumb.boards' },
     '/projects': { titleKey: 'nav.projects', crumbKey: 'crumb.projects' },
     '/team': { titleKey: 'nav.team', crumbKey: 'crumb.team' },
     '/knowledge-base': { titleKey: 'nav.knowledge', crumbKey: 'crumb.knowledge' },

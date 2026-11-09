@@ -4,17 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import { useOnOutside } from '../../hooks/useOnOutside.ts'
 import { useWorkspaceData } from '../../hooks/useWorkspaceData.ts'
 import { useI18n } from '../../i18n/useI18n.ts'
-import { projectStatusLabel } from '../../i18n/labels.ts'
-import { searchText } from '../../i18n/text.ts'
 import { cn } from '../../utils/cn.ts'
-
-interface SearchResult {
-  id: string
-  kind: 'project' | 'task'
-  title: string
-  detail: string
-  to: string
-}
+import { searchWorkspace } from '../../utils/search.ts'
 
 export function SearchField({ className }: { className?: string }) {
   const navigate = useNavigate()
@@ -24,39 +15,23 @@ export function SearchField({ className }: { className?: string }) {
   const [open, setOpen] = useState(false)
   const ref = useOnOutside<HTMLDivElement>(open, () => setOpen(false))
   const trimmed = query.trim().toLowerCase()
+  const projectLabel = t('header.project')
+  const noAssigneeLabel = t('header.noAssignee')
 
-  const results = useMemo(() => {
-    if (!trimmed) return []
-    const projectHits: SearchResult[] = projects
-      .filter((project) =>
-        `${searchText(project.name)} ${searchText(project.description)}`.toLowerCase().includes(trimmed),
-      )
-      .slice(0, 5)
-      .map((project) => ({
-        id: project.id,
-        kind: 'project' as const,
-        title: text(project.name),
-        detail: projectStatusLabel(project.status, locale),
-        to: `/projects?project=${project.id}`,
-      }))
-    const taskHits: SearchResult[] = tasks
-      .filter((task) => searchText(task.title).toLowerCase().includes(trimmed))
-      .slice(0, 5)
-      .map((task) => {
-        const project = projects.find((item) => item.id === task.projectId)
-        const assignee = users.find((user) => user.id === task.assigneeId)
-        const projectName = project ? text(project.name) : t('header.project')
-        const assigneeName = assignee ? text(assignee.name) : t('header.noAssignee')
-        return {
-          id: task.id,
-          kind: 'task' as const,
-          title: text(task.title),
-          detail: `${projectName} · ${assigneeName}`,
-          to: `/tasks?task=${task.id}`,
-        }
-      })
-    return [...projectHits, ...taskHits]
-  }, [trimmed, projects, tasks, users, locale, t, text])
+  const results = useMemo(
+    () =>
+      searchWorkspace({
+        query: trimmed,
+        projects,
+        tasks,
+        users,
+        locale,
+        text,
+        projectLabel,
+        noAssigneeLabel,
+      }),
+    [trimmed, projects, tasks, users, locale, text, projectLabel, noAssigneeLabel],
+  )
 
   function choose(to: string) {
     setQuery('')

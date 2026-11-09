@@ -1,74 +1,25 @@
 import { Sparkles } from 'lucide-react'
-import { useEffect, useState, type FormEvent } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { LanguageToggle } from '../../components/layout/LanguageToggle.tsx'
-import { Button } from '../../components/ui/Button.tsx'
 import { Card } from '../../components/ui/Card.tsx'
-import { Field, Input } from '../../components/ui/Input.tsx'
 import { useI18n } from '../../i18n/useI18n.ts'
-import { useAuthStore } from '../../store/useAuthStore.ts'
-import { MIN_PASSWORD_LENGTH, nextPathFromState, type AuthErrorCode } from '../../utils/auth.ts'
+import { MIN_PASSWORD_LENGTH } from '../../utils/auth.ts'
 import { cn } from '../../utils/cn.ts'
-
-type AuthMode = 'login' | 'register'
+import { LoginForm } from './LoginForm.tsx'
+import { RegisterForm } from './RegisterForm.tsx'
+import { useAuthForm } from './useAuthForm.ts'
 
 export function AuthPage() {
-  const location = useLocation()
-  const navigate = useNavigate()
-  const login = useAuthStore((state) => state.login)
-  const register = useAuthStore((state) => state.register)
-  const [mode, setMode] = useState<AuthMode>('login')
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState<AuthErrorCode | null>(null)
-  const [pending, setPending] = useState(false)
+  const form = useAuthForm()
   const { t } = useI18n()
 
   useEffect(() => {
-    document.title = mode === 'login' ? t('auth.loginTitle') : t('auth.registerTitle')
-  }, [mode, t])
+    document.title = form.mode === 'login' ? t('auth.loginTitle') : t('auth.registerTitle')
+  }, [form.mode, t])
 
-  function switchMode(next: AuthMode) {
-    setMode(next)
-    setError(null)
-    setConfirmPassword('')
-  }
-
-  function finish() {
-    navigate(nextPathFromState(location.state), { replace: true })
-  }
-
-  async function onLogin(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setPending(true)
-    setError(null)
-    const message = await login(email, password)
-    setPending(false)
-    if (message) {
-      setError(message)
-      return
-    }
-    finish()
-  }
-
-  async function onRegister(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (password !== confirmPassword) {
-      setError('passwordMismatch')
-      return
-    }
-    setPending(true)
-    setError(null)
-    const message = await register(name, email, password)
-    setPending(false)
-    if (message) {
-      setError(message)
-      return
-    }
-    finish()
-  }
+  const error = form.error ? (
+    <FormError message={t(`authError.${form.error}`, { min: MIN_PASSWORD_LENGTH })} />
+  ) : null
 
   return (
     <div className="grid min-h-svh place-items-center bg-zinc-100 px-4 py-10">
@@ -86,94 +37,42 @@ export function AuthPage() {
 
         <Card className="p-5 sm:p-6">
           <div className="grid grid-cols-2 rounded-lg bg-zinc-100 p-1" role="tablist" aria-label={t('auth.method')}>
-            <ModeTab active={mode === 'login'} onClick={() => switchMode('login')} disabled={pending}>
+            <ModeTab active={form.mode === 'login'} onClick={() => form.switchMode('login')} disabled={form.pending}>
               {t('auth.login')}
             </ModeTab>
-            <ModeTab active={mode === 'register'} onClick={() => switchMode('register')} disabled={pending}>
+            <ModeTab
+              active={form.mode === 'register'}
+              onClick={() => form.switchMode('register')}
+              disabled={form.pending}
+            >
               {t('auth.register')}
             </ModeTab>
           </div>
 
-          {mode === 'login' ? (
-            <form className="mt-5 space-y-4" onSubmit={onLogin}>
-              <Field label={t('auth.email')}>
-                <Input
-                  type="email"
-                  name="email"
-                  autoComplete="email"
-                  value={email}
-                  placeholder="alex@aivibe.io"
-                  onChange={(event) => setEmail(event.target.value)}
-                  required
-                />
-              </Field>
-              <Field label={t('auth.password')}>
-                <Input
-                  type="password"
-                  name="password"
-                  autoComplete="current-password"
-                  value={password}
-                  placeholder={t('auth.passwordHint')}
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                />
-              </Field>
-              {error ? <FormError message={t(`authError.${error}`, { min: MIN_PASSWORD_LENGTH })} /> : null}
-              <Button type="submit" className="w-full" disabled={pending}>
-                {pending ? t('auth.signingIn') : t('auth.signIn')}
-              </Button>
-              <p className="text-xs leading-5 text-zinc-500">{t('auth.loginHint')}</p>
-            </form>
+          {form.mode === 'login' ? (
+            <LoginForm
+              email={form.email}
+              password={form.password}
+              pending={form.pending}
+              error={error}
+              onEmailChange={form.setEmail}
+              onPasswordChange={form.setPassword}
+              onSubmit={form.onLogin}
+            />
           ) : (
-            <form className="mt-5 space-y-4" onSubmit={onRegister}>
-              <Field label={t('auth.name')}>
-                <Input
-                  name="name"
-                  autoComplete="name"
-                  value={name}
-                  placeholder={t('auth.namePlaceholder')}
-                  onChange={(event) => setName(event.target.value)}
-                  required
-                />
-              </Field>
-              <Field label={t('auth.email')}>
-                <Input
-                  type="email"
-                  name="email"
-                  autoComplete="email"
-                  value={email}
-                  placeholder="anna@example.com"
-                  onChange={(event) => setEmail(event.target.value)}
-                  required
-                />
-              </Field>
-              <Field label={t('auth.password')}>
-                <Input
-                  type="password"
-                  name="password"
-                  autoComplete="new-password"
-                  value={password}
-                  placeholder={t('auth.passwordHint')}
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                />
-              </Field>
-              <Field label={t('auth.confirmPassword')}>
-                <Input
-                  type="password"
-                  name="confirmPassword"
-                  autoComplete="new-password"
-                  value={confirmPassword}
-                  onChange={(event) => setConfirmPassword(event.target.value)}
-                  required
-                />
-              </Field>
-              {error ? <FormError message={t(`authError.${error}`, { min: MIN_PASSWORD_LENGTH })} /> : null}
-              <Button type="submit" className="w-full" disabled={pending}>
-                {pending ? t('auth.creating') : t('auth.createAccount')}
-              </Button>
-              <p className="text-xs leading-5 text-zinc-500">{t('auth.registerHint')}</p>
-            </form>
+            <RegisterForm
+              name={form.name}
+              email={form.email}
+              password={form.password}
+              confirmPassword={form.confirmPassword}
+              pending={form.pending}
+              error={error}
+              onNameChange={form.setName}
+              onEmailChange={form.setEmail}
+              onPasswordChange={form.setPassword}
+              onConfirmPasswordChange={form.setConfirmPassword}
+              onSubmit={form.onRegister}
+            />
           )}
         </Card>
       </div>
