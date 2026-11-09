@@ -58,7 +58,7 @@ export function searchWorkspace({
         kind: 'task',
         title: text(task.title),
         detail: `${projectName} · ${assigneeName}`,
-        to: `/boards?board=${task.projectId}`,
+        to: '/boards',
       }
     })
 

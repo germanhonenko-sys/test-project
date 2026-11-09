@@ -109,8 +109,43 @@ export interface NewTaskInput {
   deadline: string
 }
 
+export interface Board {
+  id: string
+  ownerId: string
+  name: string
+  description: string
+  memberIds: string[]
+}
+
+export interface BoardTask {
+  id: string
+  boardId: string
+  title: string
+  status: TaskStatus
+  assigneeId: string | null
+  priority: TaskPriority
+  deadline: string | null
+}
+
+export interface BoardTaskDraft {
+  title: string
+  status: TaskStatus
+  assigneeId: string | null
+  priority: TaskPriority
+  deadline: string | null
+}
+
+export interface NewBoardTaskInput extends BoardTaskDraft {
+  boardId: string
+}
+
+export interface Profile {
+  id: string
+  email: string
+  name: string
+}
+
 export interface NewBoardInput {
-  workspaceId: string
   name: string
   description: string
   memberIds: string[]

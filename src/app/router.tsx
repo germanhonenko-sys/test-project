@@ -10,6 +10,7 @@ import { KnowledgeBasePage } from '../pages/KnowledgeBase/KnowledgeBasePage.tsx'
 import { ProjectsPage } from '../pages/Projects/ProjectsPage.tsx'
 import { SettingsPage } from '../pages/Settings/SettingsPage.tsx'
 import { BoardsPage } from '../pages/Boards/BoardsPage.tsx'
+import { BoardViewPage } from '../pages/Boards/BoardViewPage.tsx'
 import { TeamPage } from '../pages/Team/TeamPage.tsx'
 
 export const router = createBrowserRouter([
@@ -27,6 +28,7 @@ export const router = createBrowserRouter([
           { index: true, element: <Navigate to="/dashboard" replace /> },
           { path: 'dashboard', element: <DashboardPage /> },
           { path: 'boards', element: <BoardsPage /> },
+          { path: 'boards/:boardId', element: <BoardViewPage /> },
           { path: 'tasks', element: <Navigate to="/boards" replace /> },
           { path: 'projects', element: <ProjectsPage /> },
           { path: 'team', element: <TeamPage /> },

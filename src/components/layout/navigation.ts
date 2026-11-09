@@ -40,12 +40,16 @@ export const systemNav: NavItem[] = [
 export function isNavActive(item: NavItem, pathname: string, hash: string) {
   if (item.hash) return pathname === item.to && hash === item.hash
   if (item.to === '/ai') return pathname === '/ai' && hash !== '#generator'
+  if (item.to === '/boards') return pathname === '/boards' || pathname.startsWith('/boards/')
   return pathname === item.to
 }
 
 export function sectionMeta(pathname: string, hash: string) {
   if (pathname === '/ai' && hash === '#generator') {
     return { titleKey: 'nav.generator' as const, crumbKey: 'crumb.ai' as const }
+  }
+  if (pathname === '/boards' || pathname.startsWith('/boards/')) {
+    return { titleKey: 'nav.boards' as const, crumbKey: 'crumb.boards' as const }
   }
   const map: Record<string, { titleKey: MessageKey; crumbKey: MessageKey }> = {
     '/dashboard': { titleKey: 'nav.dashboard', crumbKey: 'crumb.overview' },

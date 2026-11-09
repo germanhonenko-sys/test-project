@@ -2,7 +2,7 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { cn } from '../../utils/cn.ts'
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'ai'
+type Variant = 'primary' | 'secondary' | 'ghost' | 'ai' | 'danger'
 type Size = 'sm' | 'md'
 
 const variants: Record<Variant, string> = {
@@ -10,6 +10,7 @@ const variants: Record<Variant, string> = {
   secondary: 'border border-zinc-200 bg-white text-zinc-800 shadow-sm hover:bg-zinc-50',
   ghost: 'text-zinc-600 hover:bg-zinc-100',
   ai: 'bg-violet-600 text-white hover:bg-violet-700',
+  danger: 'bg-rose-600 text-white hover:bg-rose-700',
 }
 
 const sizes: Record<Size, string> = {

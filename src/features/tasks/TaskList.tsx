@@ -50,7 +50,7 @@ export function TaskList({
           >
             <div className="min-w-0 flex-1">
               <Link
-                to={`/boards?board=${task.projectId}`}
+                to="/boards"
                 className="text-sm font-medium text-zinc-900 hover:text-indigo-700"
               >
                 {text(task.title)}

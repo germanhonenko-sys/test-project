@@ -6,15 +6,21 @@ import { mockProjects } from '../data/mockProjects.ts'
 import { mockTasks } from '../data/mockTasks.ts'
 import { mockUsers } from '../data/mockUsers.ts'
 import { mockWorkspaces } from '../data/mockWorkspaces.ts'
+import { deleteBoard, ensureProfile, fetchBoards, insertBoard, saveBoard, saveTaskStatus } from '../lib/boards.ts'
 import type {
   Activity,
   AiHistoryItem,
   AppNotification,
+  Board,
+  BoardTask,
+  BoardTaskDraft,
   KnowledgeDocument,
   NewBoardInput,
+  NewBoardTaskInput,
   NewDocumentInput,
   NewTaskInput,
   Preferences,
+  Profile,
   Project,
   Task,
   TaskStatus,
@@ -31,6 +37,10 @@ interface AppState {
   activeWorkspaceId: string
   projects: Project[]
   tasks: Task[]
+  boards: Board[]
+  boardTasks: BoardTask[]
+  profiles: Profile[]
+  boardsStatus: 'idle' | 'loading' | 'ready' | 'error'
   users: User[]
   activity: Activity[]
   documents: KnowledgeDocument[]
@@ -47,7 +57,14 @@ interface AppState {
   openCreateTask: () => void
   closeCreateTask: () => void
   addTask: (input: NewTaskInput) => void
-  addBoard: (input: NewBoardInput) => void
+  loadBoards: () => Promise<void>
+  addBoard: (input: NewBoardInput) => Promise<boolean>
+  updateBoard: (boardId: string, input: NewBoardInput) => Promise<boolean>
+  removeBoard: (boardId: string) => Promise<boolean>
+  setBoardTaskStatus: (taskId: string, status: TaskStatus) => Promise<void>
+  addBoardTask: (input: NewBoardTaskInput) => void
+  updateBoardTask: (taskId: string, patch: Partial<BoardTaskDraft>) => void
+  removeBoardTask: (taskId: string) => void
   setTaskStatus: (taskId: string, status: TaskStatus) => void
   addDocument: (input: NewDocumentInput) => void
   toggleTelegram: (workspaceId: string) => void
@@ -64,6 +81,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   activeWorkspaceId: initialWorkspace?.id ?? 'ws-aivibe',
   projects: mockProjects,
   tasks: mockTasks,
+  boards: [],
+  boardTasks: [],
+  profiles: [],
+  boardsStatus: 'idle',
   users: mockUsers,
   activity: mockActivity,
   documents: mockDocuments,
@@ -77,7 +98,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   sidebarOpen: false,
   createTaskOpen: false,
-  setCurrentUserId: (userId) => set({ currentUserId: userId }),
+  setCurrentUserId: (userId) =>
+    set(
+      userId
+        ? { currentUserId: userId }
+        : {
+            currentUserId: '',
+            boards: [],
+            boardTasks: [],
+            profiles: [],
+            boardsStatus: 'idle',
+          },
+    ),
   addUser: (user) =>
     set((state) =>
       state.users.some(
@@ -100,20 +132,88 @@ export const useAppStore = create<AppState>((set, get) => ({
       createTaskOpen: false,
     }))
   },
-  addBoard: (input) => {
-    const deadline = new Date()
-    deadline.setDate(deadline.getDate() + 30)
-    const project: Project = {
-      id: createId('proj'),
-      workspaceId: input.workspaceId,
-      name: both(input.name),
-      description: both(input.description),
-      memberIds: input.memberIds,
-      progress: 0,
-      deadline: `${deadline.toISOString().slice(0, 10)}T12:00:00`,
-      status: 'По плану',
+  loadBoards: async () => {
+    const userId = get().currentUserId
+    if (!userId || get().boardsStatus === 'loading' || get().boardsStatus === 'ready') return
+    const user = get().users.find((item) => item.id === userId)
+    set({ boardsStatus: 'loading' })
+    try {
+      if (user) {
+        const profileError = await ensureProfile({ id: user.id, email: user.email, name: user.name.ru })
+        if (profileError) {
+          set({ boardsStatus: 'error' })
+          return
+        }
+      }
+      const result = await fetchBoards()
+      if (result.error) {
+        set({ boardsStatus: 'error' })
+        return
+      }
+      set({
+        boards: result.boards ?? [],
+        boardTasks: result.tasks ?? [],
+        profiles: result.profiles ?? [],
+        boardsStatus: 'ready',
+      })
+    } catch {
+      set({ boardsStatus: 'error' })
     }
-    set((state) => ({ projects: [project, ...state.projects] }))
+  },
+  addBoard: async (input) => {
+    const ownerId = get().currentUserId
+    if (!ownerId) return false
+    const { error, board } = await insertBoard(ownerId, input)
+    if (error || !board) return false
+    set((state) => ({ boards: [board, ...state.boards] }))
+    return true
+  },
+  updateBoard: async (boardId, input) => {
+    const error = await saveBoard(boardId, input)
+    if (error) return false
+    set((state) => ({
+      boards: state.boards.map((board) =>
+        board.id === boardId
+          ? { ...board, name: input.name, description: input.description, memberIds: input.memberIds }
+          : board,
+      ),
+    }))
+    return true
+  },
+  removeBoard: async (boardId) => {
+    const error = await deleteBoard(boardId)
+    if (error) return false
+    set((state) => ({
+      boards: state.boards.filter((board) => board.id !== boardId),
+      boardTasks: state.boardTasks.filter((task) => task.boardId !== boardId),
+    }))
+    return true
+  },
+  addBoardTask: (input) => {
+    const task: BoardTask = { id: createId('board-task'), ...input }
+    set((state) => ({ boardTasks: [...state.boardTasks, task] }))
+  },
+  updateBoardTask: (taskId, patch) => {
+    set((state) => ({
+      boardTasks: state.boardTasks.map((task) => (task.id === taskId ? { ...task, ...patch } : task)),
+    }))
+  },
+  removeBoardTask: (taskId) => {
+    set((state) => ({ boardTasks: state.boardTasks.filter((task) => task.id !== taskId) }))
+  },
+  setBoardTaskStatus: async (taskId, status) => {
+    const current = get().boardTasks.find((task) => task.id === taskId)
+    if (!current || current.status === status) return
+    set((state) => ({
+      boardTasks: state.boardTasks.map((task) => (task.id === taskId ? { ...task, status } : task)),
+    }))
+    const error = await saveTaskStatus(taskId, status)
+    if (!error) return
+    set((state) => ({
+      boardTasks: state.boardTasks.map((task) =>
+        task.id === taskId ? { ...task, status: current.status } : task,
+      ),
+    }))
   },
   setTaskStatus: (taskId, status) => {
     const current = get().tasks.find((task) => task.id === taskId)
