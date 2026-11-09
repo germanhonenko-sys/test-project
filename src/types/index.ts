@@ -109,6 +109,13 @@ export interface NewTaskInput {
   deadline: string
 }
 
+export interface NewBoardInput {
+  workspaceId: string
+  name: string
+  description: string
+  memberIds: string[]
+}
+
 export interface NewDocumentInput {
   workspaceId: string
   name: string

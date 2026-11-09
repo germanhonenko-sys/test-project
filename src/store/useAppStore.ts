@@ -11,6 +11,7 @@ import type {
   AiHistoryItem,
   AppNotification,
   KnowledgeDocument,
+  NewBoardInput,
   NewDocumentInput,
   NewTaskInput,
   Preferences,
@@ -46,6 +47,7 @@ interface AppState {
   openCreateTask: () => void
   closeCreateTask: () => void
   addTask: (input: NewTaskInput) => void
+  addBoard: (input: NewBoardInput) => void
   setTaskStatus: (taskId: string, status: TaskStatus) => void
   addDocument: (input: NewDocumentInput) => void
   toggleTelegram: (workspaceId: string) => void
@@ -97,6 +99,21 @@ export const useAppStore = create<AppState>((set, get) => ({
       activity: [taskCreatedActivity(task, projectName, state.currentUserId), ...state.activity],
       createTaskOpen: false,
     }))
+  },
+  addBoard: (input) => {
+    const deadline = new Date()
+    deadline.setDate(deadline.getDate() + 30)
+    const project: Project = {
+      id: createId('proj'),
+      workspaceId: input.workspaceId,
+      name: both(input.name),
+      description: both(input.description),
+      memberIds: input.memberIds,
+      progress: 0,
+      deadline: `${deadline.toISOString().slice(0, 10)}T12:00:00`,
+      status: 'По плану',
+    }
+    set((state) => ({ projects: [project, ...state.projects] }))
   },
   setTaskStatus: (taskId, status) => {
     const current = get().tasks.find((task) => task.id === taskId)
