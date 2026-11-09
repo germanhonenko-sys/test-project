@@ -10,30 +10,31 @@ import {
   WandSparkles,
   type LucideIcon,
 } from 'lucide-react'
+import type { MessageKey } from '../../i18n/translate.ts'
 
 export interface NavItem {
-  label: string
+  labelKey: MessageKey
   to: string
   icon: LucideIcon
   hash?: string
 }
 
 export const mainNav: NavItem[] = [
-  { label: 'Дашборд', to: '/dashboard', icon: LayoutDashboard },
-  { label: 'Мои задачи', to: '/tasks', icon: ListTodo },
-  { label: 'Проекты', to: '/projects', icon: FolderKanban },
-  { label: 'Команда', to: '/team', icon: Users },
-  { label: 'База знаний', to: '/knowledge-base', icon: BookOpen },
+  { labelKey: 'nav.dashboard', to: '/dashboard', icon: LayoutDashboard },
+  { labelKey: 'nav.tasks', to: '/tasks', icon: ListTodo },
+  { labelKey: 'nav.projects', to: '/projects', icon: FolderKanban },
+  { labelKey: 'nav.team', to: '/team', icon: Users },
+  { labelKey: 'nav.knowledge', to: '/knowledge-base', icon: BookOpen },
 ]
 
 export const aiNav: NavItem[] = [
-  { label: 'AI-ассистент', to: '/ai', icon: Sparkles },
-  { label: 'Генератор задач', to: '/ai', icon: WandSparkles, hash: '#generator' },
+  { labelKey: 'nav.assistant', to: '/ai', icon: Sparkles },
+  { labelKey: 'nav.generator', to: '/ai', icon: WandSparkles, hash: '#generator' },
 ]
 
 export const systemNav: NavItem[] = [
-  { label: 'Интеграция с Telegram', to: '/integrations', icon: Send },
-  { label: 'Настройки', to: '/settings', icon: Settings },
+  { labelKey: 'nav.telegram', to: '/integrations', icon: Send },
+  { labelKey: 'nav.settings', to: '/settings', icon: Settings },
 ]
 
 export function isNavActive(item: NavItem, pathname: string, hash: string) {
@@ -44,17 +45,17 @@ export function isNavActive(item: NavItem, pathname: string, hash: string) {
 
 export function sectionMeta(pathname: string, hash: string) {
   if (pathname === '/ai' && hash === '#generator') {
-    return { title: 'Генератор задач', crumb: 'AI' }
+    return { titleKey: 'nav.generator' as const, crumbKey: 'crumb.ai' as const }
   }
-  const map: Record<string, { title: string; crumb: string }> = {
-    '/dashboard': { title: 'Дашборд', crumb: 'Обзор' },
-    '/tasks': { title: 'Мои задачи', crumb: 'Задачи' },
-    '/projects': { title: 'Проекты', crumb: 'Проекты' },
-    '/team': { title: 'Команда', crumb: 'Команда' },
-    '/knowledge-base': { title: 'База знаний', crumb: 'Знания' },
-    '/ai': { title: 'AI-ассистент', crumb: 'AI' },
-    '/integrations': { title: 'Интеграция с Telegram', crumb: 'Интеграции' },
-    '/settings': { title: 'Настройки', crumb: 'Настройки' },
+  const map: Record<string, { titleKey: MessageKey; crumbKey: MessageKey }> = {
+    '/dashboard': { titleKey: 'nav.dashboard', crumbKey: 'crumb.overview' },
+    '/tasks': { titleKey: 'nav.tasks', crumbKey: 'crumb.tasks' },
+    '/projects': { titleKey: 'nav.projects', crumbKey: 'crumb.projects' },
+    '/team': { titleKey: 'nav.team', crumbKey: 'crumb.team' },
+    '/knowledge-base': { titleKey: 'nav.knowledge', crumbKey: 'crumb.knowledge' },
+    '/ai': { titleKey: 'nav.assistant', crumbKey: 'crumb.ai' },
+    '/integrations': { titleKey: 'nav.telegram', crumbKey: 'crumb.integrations' },
+    '/settings': { titleKey: 'nav.settings', crumbKey: 'crumb.settings' },
   }
-  return map[pathname] ?? { title: 'AivibeBoard', crumb: 'Пространство' }
+  return map[pathname] ?? { titleKey: 'appName' as const, crumbKey: 'crumb.space' as const }
 }

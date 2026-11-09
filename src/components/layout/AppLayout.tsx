@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useMediaQuery } from '../../hooks/useMediaQuery.ts'
+import { useI18n } from '../../i18n/useI18n.ts'
 import { useAppStore } from '../../store/useAppStore.ts'
 import { CreateTaskModal } from '../../features/tasks/CreateTaskModal.tsx'
 import { Header } from './Header.tsx'
@@ -13,14 +14,16 @@ export function AppLayout() {
   const sidebarOpen = useAppStore((state) => state.sidebarOpen)
   const setSidebarOpen = useAppStore((state) => state.setSidebarOpen)
   const meta = sectionMeta(location.pathname, location.hash)
+  const { t } = useI18n()
+  const title = t(meta.titleKey)
 
   useEffect(() => {
     setSidebarOpen(false)
   }, [location.pathname, location.hash, setSidebarOpen])
 
   useEffect(() => {
-    document.title = `${meta.title} · AivibeBoard`
-  }, [meta.title])
+    document.title = `${title} · AivibeBoard`
+  }, [title])
 
   return (
     <div className="flex h-svh overflow-hidden bg-zinc-100 text-zinc-900">
@@ -28,7 +31,7 @@ export function AppLayout() {
         <button
           type="button"
           className="fixed inset-0 z-30 bg-zinc-900/30"
-          aria-label="Закрыть меню"
+          aria-label={t('header.closeMenu')}
           onClick={() => setSidebarOpen(false)}
         />
       ) : null}

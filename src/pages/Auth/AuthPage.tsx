@@ -1,11 +1,13 @@
 import { Sparkles } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { LanguageToggle } from '../../components/layout/LanguageToggle.tsx'
 import { Button } from '../../components/ui/Button.tsx'
 import { Card } from '../../components/ui/Card.tsx'
 import { Field, Input } from '../../components/ui/Input.tsx'
+import { useI18n } from '../../i18n/useI18n.ts'
 import { useAuthStore } from '../../store/useAuthStore.ts'
-import { nextPathFromState } from '../../utils/auth.ts'
+import { MIN_PASSWORD_LENGTH, nextPathFromState, type AuthErrorCode } from '../../utils/auth.ts'
 import { cn } from '../../utils/cn.ts'
 
 type AuthMode = 'login' | 'register'
@@ -20,12 +22,13 @@ export function AuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<AuthErrorCode | null>(null)
   const [pending, setPending] = useState(false)
+  const { t } = useI18n()
 
   useEffect(() => {
-    document.title = mode === 'login' ? 'Вход · AivibeBoard' : 'Регистрация · AivibeBoard'
-  }, [mode])
+    document.title = mode === 'login' ? t('auth.loginTitle') : t('auth.registerTitle')
+  }, [mode, t])
 
   function switchMode(next: AuthMode) {
     setMode(next)
@@ -53,7 +56,7 @@ export function AuthPage() {
   async function onRegister(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (password !== confirmPassword) {
-      setError('Пароли не совпадают.')
+      setError('passwordMismatch')
       return
     }
     setPending(true)
@@ -70,27 +73,30 @@ export function AuthPage() {
   return (
     <div className="grid min-h-svh place-items-center bg-zinc-100 px-4 py-10">
       <div className="w-full max-w-md">
+        <div className="mb-4 flex justify-end">
+          <LanguageToggle />
+        </div>
         <div className="mb-6 flex flex-col items-center text-center">
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm">
             <Sparkles className="h-5 w-5" />
           </span>
           <h1 className="mt-4 text-xl font-semibold text-zinc-900">AivibeBoard</h1>
-          <p className="mt-1 text-sm text-zinc-500">Войдите, чтобы открыть рабочее пространство.</p>
+          <p className="mt-1 text-sm text-zinc-500">{t('auth.subtitle')}</p>
         </div>
 
         <Card className="p-5 sm:p-6">
-          <div className="grid grid-cols-2 rounded-lg bg-zinc-100 p-1" role="tablist" aria-label="Способ входа">
+          <div className="grid grid-cols-2 rounded-lg bg-zinc-100 p-1" role="tablist" aria-label={t('auth.method')}>
             <ModeTab active={mode === 'login'} onClick={() => switchMode('login')} disabled={pending}>
-              Вход
+              {t('auth.login')}
             </ModeTab>
             <ModeTab active={mode === 'register'} onClick={() => switchMode('register')} disabled={pending}>
-              Регистрация
+              {t('auth.register')}
             </ModeTab>
           </div>
 
           {mode === 'login' ? (
             <form className="mt-5 space-y-4" onSubmit={onLogin}>
-              <Field label="Почта">
+              <Field label={t('auth.email')}>
                 <Input
                   type="email"
                   name="email"
@@ -101,38 +107,36 @@ export function AuthPage() {
                   required
                 />
               </Field>
-              <Field label="Пароль">
+              <Field label={t('auth.password')}>
                 <Input
                   type="password"
                   name="password"
                   autoComplete="current-password"
                   value={password}
-                  placeholder="Не короче 6 символов"
+                  placeholder={t('auth.passwordHint')}
                   onChange={(event) => setPassword(event.target.value)}
                   required
                 />
               </Field>
-              {error ? <FormError message={error} /> : null}
+              {error ? <FormError message={t(`authError.${error}`, { min: MIN_PASSWORD_LENGTH })} /> : null}
               <Button type="submit" className="w-full" disabled={pending}>
-                {pending ? 'Входим…' : 'Войти'}
+                {pending ? t('auth.signingIn') : t('auth.signIn')}
               </Button>
-              <p className="text-xs leading-5 text-zinc-500">
-                Войдите с почтой и паролем, указанными при регистрации.
-              </p>
+              <p className="text-xs leading-5 text-zinc-500">{t('auth.loginHint')}</p>
             </form>
           ) : (
             <form className="mt-5 space-y-4" onSubmit={onRegister}>
-              <Field label="Имя">
+              <Field label={t('auth.name')}>
                 <Input
                   name="name"
                   autoComplete="name"
                   value={name}
-                  placeholder="Анна Соколова"
+                  placeholder={t('auth.namePlaceholder')}
                   onChange={(event) => setName(event.target.value)}
                   required
                 />
               </Field>
-              <Field label="Почта">
+              <Field label={t('auth.email')}>
                 <Input
                   type="email"
                   name="email"
@@ -143,18 +147,18 @@ export function AuthPage() {
                   required
                 />
               </Field>
-              <Field label="Пароль">
+              <Field label={t('auth.password')}>
                 <Input
                   type="password"
                   name="password"
                   autoComplete="new-password"
                   value={password}
-                  placeholder="Не короче 6 символов"
+                  placeholder={t('auth.passwordHint')}
                   onChange={(event) => setPassword(event.target.value)}
                   required
                 />
               </Field>
-              <Field label="Повторите пароль">
+              <Field label={t('auth.confirmPassword')}>
                 <Input
                   type="password"
                   name="confirmPassword"
@@ -164,13 +168,11 @@ export function AuthPage() {
                   required
                 />
               </Field>
-              {error ? <FormError message={error} /> : null}
+              {error ? <FormError message={t(`authError.${error}`, { min: MIN_PASSWORD_LENGTH })} /> : null}
               <Button type="submit" className="w-full" disabled={pending}>
-                {pending ? 'Создаём…' : 'Создать аккаунт'}
+                {pending ? t('auth.creating') : t('auth.createAccount')}
               </Button>
-              <p className="text-xs leading-5 text-zinc-500">
-                После создания аккаунта откроется главная страница.
-              </p>
+              <p className="text-xs leading-5 text-zinc-500">{t('auth.registerHint')}</p>
             </form>
           )}
         </Card>

@@ -1,16 +1,18 @@
 import { PageHeader, PageShell } from '../../components/layout/PageHeader.tsx'
 import { KnowledgeBrowser } from '../../features/knowledge-base/KnowledgeBrowser.tsx'
 import { useWorkspaceData } from '../../hooks/useWorkspaceData.ts'
+import { useI18n } from '../../i18n/useI18n.ts'
 
 export function KnowledgeBasePage() {
   const { workspace } = useWorkspaceData()
+  const { t, text } = useI18n()
 
   return (
     <PageShell>
       <PageHeader
-        eyebrow={workspace.name}
-        title="База знаний"
-        description="Документы, которые команда ищет при планировании. Загрузки остаются в этой сессии."
+        eyebrow={text(workspace.name)}
+        title={t('nav.knowledge')}
+        description={t('page.knowledgeDescription')}
       />
       <KnowledgeBrowser />
     </PageShell>

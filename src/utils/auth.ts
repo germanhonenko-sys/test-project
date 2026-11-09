@@ -42,12 +42,26 @@ export function nextPathFromState(state: unknown) {
   return `${pathname}${from.search ?? ''}${from.hash ?? ''}`
 }
 
-export function authErrorMessage(error: { message: string; code?: string }) {
+export type AuthErrorCode =
+  | 'fillCredentials'
+  | 'invalidEmail'
+  | 'passwordLength'
+  | 'invalidCredentials'
+  | 'emailTaken'
+  | 'confirmThenLogin'
+  | 'rateLimit'
+  | 'generic'
+  | 'enterName'
+  | 'loginFailed'
+  | 'confirmThenHome'
+  | 'passwordMismatch'
+
+export function authErrorMessage(error: { message: string; code?: string }): AuthErrorCode {
   const message = error.message.toLowerCase()
   const code = error.code ?? ''
 
   if (code === 'invalid_credentials' || message.includes('invalid login credentials')) {
-    return 'Неверная почта или пароль.'
+    return 'invalidCredentials'
   }
   if (
     code === 'email_exists' ||
@@ -55,20 +69,20 @@ export function authErrorMessage(error: { message: string; code?: string }) {
     message.includes('already registered') ||
     message.includes('already been registered')
   ) {
-    return 'Эта почта уже зарегистрирована.'
+    return 'emailTaken'
   }
   if (code === 'email_not_confirmed' || message.includes('email not confirmed')) {
-    return 'Подтвердите почту по ссылке из письма, затем войдите.'
+    return 'confirmThenLogin'
   }
   if (
     code === 'over_email_send_rate_limit' ||
     code === 'over_request_rate_limit' ||
     message.includes('rate limit')
   ) {
-    return 'Слишком много попыток подряд. Подождите немного и повторите.'
+    return 'rateLimit'
   }
   if (message.includes('password') && (message.includes('at least') || message.includes('short') || message.includes('6'))) {
-    return `Пароль должен быть не короче ${MIN_PASSWORD_LENGTH} символов.`
+    return 'passwordLength'
   }
   if (
     code === 'email_address_invalid' ||
@@ -76,7 +90,7 @@ export function authErrorMessage(error: { message: string; code?: string }) {
     message.includes('unable to validate email') ||
     (message.includes('email address') && message.includes('invalid'))
   ) {
-    return 'Укажите корректную почту.'
+    return 'invalidEmail'
   }
-  return 'Не удалось выполнить запрос. Попробуйте ещё раз.'
+  return 'generic'
 }

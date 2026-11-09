@@ -2,6 +2,7 @@ import { CircleCheck, FolderKanban, ListTodo, TrendingUp, Users } from 'lucide-r
 import { AvatarGroup } from '../../components/ui/Avatar.tsx'
 import { Card } from '../../components/ui/Card.tsx'
 import { useWorkspaceData } from '../../hooks/useWorkspaceData.ts'
+import { useI18n } from '../../i18n/useI18n.ts'
 
 export function StatGrid() {
   const { projects, tasks, members, currentUser, workspace } = useWorkspaceData()
@@ -10,12 +11,13 @@ export function StatGrid() {
   const inProgress = mine.filter((task) => task.status === 'В работе').length
   const done = tasks.filter((task) => task.status === 'Готово').length
   const percent = tasks.length === 0 ? 0 : Math.round((done / tasks.length) * 100)
+  const { t, text } = useI18n()
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <Card className="p-4">
         <div className="flex items-start justify-between">
-          <p className="text-sm text-zinc-500">Активные проекты</p>
+          <p className="text-sm text-zinc-500">{t('dash.activeProjects')}</p>
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
             <FolderKanban className="h-4 w-4" />
           </span>
@@ -23,32 +25,32 @@ export function StatGrid() {
         <p className="mt-3 text-2xl font-semibold tracking-tight text-zinc-900">{active}</p>
         <p className="mt-1 flex items-center gap-1 text-xs text-emerald-700">
           <TrendingUp className="h-3 w-3" />
-          {workspace.projectDelta}
+          {text(workspace.projectDelta)}
         </p>
       </Card>
       <Card className="p-4">
         <div className="flex items-start justify-between">
-          <p className="text-sm text-zinc-500">Мои задачи</p>
+          <p className="text-sm text-zinc-500">{t('dash.myTasks')}</p>
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
             <ListTodo className="h-4 w-4" />
           </span>
         </div>
         <p className="mt-3 text-2xl font-semibold tracking-tight text-zinc-900">{mine.length}</p>
-        <p className="mt-1 text-xs text-zinc-500">{inProgress} в работе</p>
+        <p className="mt-1 text-xs text-zinc-500">{t('dash.inProgress', { count: inProgress })}</p>
       </Card>
       <Card className="p-4">
         <div className="flex items-start justify-between">
-          <p className="text-sm text-zinc-500">Завершено</p>
+          <p className="text-sm text-zinc-500">{t('dash.completed')}</p>
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
             <CircleCheck className="h-4 w-4" />
           </span>
         </div>
         <p className="mt-3 text-2xl font-semibold tracking-tight text-zinc-900">{done}</p>
-        <p className="mt-1 text-xs text-zinc-500">{percent}% задач пространства</p>
+        <p className="mt-1 text-xs text-zinc-500">{t('dash.workspaceTasks', { percent })}</p>
       </Card>
       <Card className="p-4">
         <div className="flex items-start justify-between">
-          <p className="text-sm text-zinc-500">Участники</p>
+          <p className="text-sm text-zinc-500">{t('dash.members')}</p>
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
             <Users className="h-4 w-4" />
           </span>

@@ -3,9 +3,11 @@ import { useSearchParams } from 'react-router-dom'
 import { PageHeader, PageShell } from '../../components/layout/PageHeader.tsx'
 import { ProjectCard } from '../../features/projects/ProjectCard.tsx'
 import { useWorkspaceData } from '../../hooks/useWorkspaceData.ts'
+import { useI18n } from '../../i18n/useI18n.ts'
 
 export function ProjectsPage() {
   const { projects, workspace } = useWorkspaceData()
+  const { t, text } = useI18n()
   const [params] = useSearchParams()
   const highlightId = params.get('project') ?? undefined
 
@@ -17,9 +19,9 @@ export function ProjectsPage() {
   return (
     <PageShell>
       <PageHeader
-        eyebrow={workspace.name}
-        title="Проекты"
-        description="Текущие направления, прогресс и люди, которые их ведут."
+        eyebrow={text(workspace.name)}
+        title={t('nav.projects')}
+        description={t('page.projectsDescription')}
       />
       <div className="grid gap-4 md:grid-cols-2">
         {projects.map((project) => (

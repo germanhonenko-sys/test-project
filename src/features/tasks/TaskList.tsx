@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { Badge } from '../../components/ui/Badge.tsx'
 import { useWorkspaceData } from '../../hooks/useWorkspaceData.ts'
+import { useI18n } from '../../i18n/useI18n.ts'
+import { priorityLabel, statusLabel } from '../../i18n/labels.ts'
 import { useAppStore } from '../../store/useAppStore.ts'
 import type { Task } from '../../types/index.ts'
 import { taskStatuses } from '../../types/index.ts'
@@ -23,6 +25,7 @@ export function TaskList({
 }) {
   const { projects, users } = useWorkspaceData()
   const setTaskStatus = useAppStore((state) => state.setTaskStatus)
+  const { locale, t, text } = useI18n()
 
   if (tasks.length === 0) {
     return <p className="px-4 py-6 text-sm text-zinc-500">{empty}</p>
@@ -50,17 +53,18 @@ export function TaskList({
                 to={`/tasks?task=${task.id}`}
                 className="text-sm font-medium text-zinc-900 hover:text-indigo-700"
               >
-                {task.title}
+                {text(task.title)}
               </Link>
               <p className="mt-0.5 truncate text-xs text-zinc-500">
-                {project?.name ?? 'Проект'} · {assignee?.name ?? 'Без исполнителя'}
+                {project ? text(project.name) : t('task.projectFallback')} ·{' '}
+                {assignee ? text(assignee.name) : t('header.noAssignee')}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Badge className={priorityBadgeClass[task.priority]}>{task.priority}</Badge>
+              <Badge className={priorityBadgeClass[task.priority]}>{priorityLabel(task.priority, locale)}</Badge>
               <select
                 value={task.status}
-                aria-label={`Статус: ${task.title}`}
+                aria-label={t('task.statusOf', { title: text(task.title) })}
                 onChange={(event) => {
                   if (isTaskStatus(event.target.value)) setTaskStatus(task.id, event.target.value)
                 }}
@@ -71,12 +75,12 @@ export function TaskList({
               >
                 {taskStatuses.map((status) => (
                   <option key={status} value={status}>
-                    {status}
+                    {statusLabel(status, locale)}
                   </option>
                 ))}
               </select>
               <span className={cn('text-xs tabular-nums', overdue ? 'font-medium text-rose-600' : 'text-zinc-500')}>
-                {formatDeadline(task.deadline)}
+                {formatDeadline(task.deadline, locale)}
               </span>
             </div>
           </li>

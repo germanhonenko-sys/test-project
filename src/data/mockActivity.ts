@@ -1,3 +1,4 @@
+import { loc } from '../i18n/text.ts'
 import type { Activity } from '../types/index.ts'
 import { hoursAgo } from './time.ts'
 
@@ -7,7 +8,10 @@ export const mockActivity: Activity[] = [
     workspaceId: 'ws-aivibe',
     actorId: 'jordan',
     kind: 'created',
-    message: 'новая задача «Собрать боковое меню» в проекте «Разработка AivibeBoard».',
+    message: loc(
+      'новая задача «Собрать боковое меню» в проекте «Разработка AivibeBoard».',
+      'new task “Build the sidebar” in project “AivibeBoard development”.',
+    ),
     timestamp: hoursAgo(2),
   },
   {
@@ -15,7 +19,7 @@ export const mockActivity: Activity[] = [
     workspaceId: 'ws-aivibe',
     actorId: 'sam',
     kind: 'comment',
-    message: 'комментарий к структуре страницы запуска.',
+    message: loc('комментарий к структуре страницы запуска.', 'comment on the launch page outline.'),
     timestamp: hoursAgo(3),
   },
   {
@@ -23,7 +27,10 @@ export const mockActivity: Activity[] = [
     workspaceId: 'ws-aivibe',
     actorId: 'alex',
     kind: 'status',
-    message: 'статус «Проверить пайплайн загрузки медиа» изменён на «В работе».',
+    message: loc(
+      'статус «Проверить пайплайн загрузки медиа» изменён на «В работе».',
+      'status of “Check the media upload pipeline” changed to “In progress”.',
+    ),
     timestamp: hoursAgo(5),
   },
   {
@@ -31,7 +38,7 @@ export const mockActivity: Activity[] = [
     workspaceId: 'ws-aivibe',
     actorId: 'maya',
     kind: 'completed',
-    message: 'задача «Выбрать акцентный цвет» завершена.',
+    message: loc('задача «Выбрать акцентный цвет» завершена.', 'task “Choose the accent color” completed.'),
     timestamp: hoursAgo(20),
   },
   {
@@ -39,7 +46,10 @@ export const mockActivity: Activity[] = [
     workspaceId: 'ws-aivibe',
     actorId: 'lena',
     kind: 'member',
-    message: 'Джордан Блейк добавлен в проект «Платформа Medialog AI».',
+    message: loc(
+      'Джордан Блейк добавлен в проект «Платформа Medialog AI».',
+      'Jordan Blake was added to project “Medialog AI platform”.',
+    ),
     timestamp: hoursAgo(26),
   },
   {
@@ -47,7 +57,10 @@ export const mockActivity: Activity[] = [
     workspaceId: 'ws-aivibe',
     actorId: 'priya',
     kind: 'created',
-    message: 'новая задача «Проверить пайплайн загрузки медиа» в проекте «Платформа Medialog AI».',
+    message: loc(
+      'новая задача «Проверить пайплайн загрузки медиа» в проекте «Платформа Medialog AI».',
+      'new task “Check the media upload pipeline” in project “Medialog AI platform”.',
+    ),
     timestamp: hoursAgo(30),
   },
   {
@@ -55,7 +68,7 @@ export const mockActivity: Activity[] = [
     workspaceId: 'ws-northwind',
     actorId: 'sam',
     kind: 'comment',
-    message: 'комментарий к первому экрану сайта.',
+    message: loc('комментарий к первому экрану сайта.', 'comment on the website hero.'),
     timestamp: hoursAgo(4),
   },
   {
@@ -63,7 +76,10 @@ export const mockActivity: Activity[] = [
     workspaceId: 'ws-northwind',
     actorId: 'jordan',
     kind: 'status',
-    message: 'статус «Проверить навигацию клиентского портала» изменён на «В работе».',
+    message: loc(
+      'статус «Проверить навигацию клиентского портала» изменён на «В работе».',
+      'status of “Review client portal navigation” changed to “In progress”.',
+    ),
     timestamp: hoursAgo(8),
   },
   {
@@ -71,7 +87,10 @@ export const mockActivity: Activity[] = [
     workspaceId: 'ws-northwind',
     actorId: 'alex',
     kind: 'created',
-    message: 'новая задача «Собрать обратную связь заказчика» в проекте «Обновление клиентского портала».',
+    message: loc(
+      'новая задача «Собрать обратную связь заказчика» в проекте «Обновление клиентского портала».',
+      'new task “Collect client feedback” in project “Client portal refresh”.',
+    ),
     timestamp: hoursAgo(28),
   },
 ]

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { Button } from '../../components/ui/Button.tsx'
 import { Input } from '../../components/ui/Input.tsx'
+import { useI18n } from '../../i18n/useI18n.ts'
 import { useAppStore } from '../../store/useAppStore.ts'
 import type { AiHistoryItem } from '../../types/index.ts'
 import { SubtaskList } from './SubtaskList.tsx'
@@ -19,6 +20,7 @@ export function AiComposer({ id, title, description, placeholder, actionLabel }:
   const submitPrompt = useAppStore((state) => state.submitPrompt)
   const [draft, setDraft] = useState('')
   const [result, setResult] = useState<AiHistoryItem | null>(null)
+  const { t } = useI18n()
 
   function generate() {
     setResult(submitPrompt(draft))
@@ -58,7 +60,7 @@ export function AiComposer({ id, title, description, placeholder, actionLabel }:
           animate={{ opacity: 1, y: 0 }}
           className="mt-4"
         >
-          <p className="mb-2 text-xs font-medium tracking-wide text-violet-700 uppercase">Предложенные задачи</p>
+          <p className="mb-2 text-xs font-medium tracking-wide text-violet-700 uppercase">{t('ai.suggested')}</p>
           <SubtaskList items={result.subtasks} />
         </motion.div>
       ) : null}

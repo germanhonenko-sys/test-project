@@ -2,6 +2,7 @@ import { X } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { useI18n } from '../../i18n/useI18n.ts'
 
 interface ModalProps {
   open: boolean
@@ -12,6 +13,7 @@ interface ModalProps {
 }
 
 export function Modal({ open, title, description, onClose, children }: ModalProps) {
+  const { t } = useI18n()
   useEffect(() => {
     if (!open) return
     const onKey = (event: KeyboardEvent) => {
@@ -61,7 +63,7 @@ export function Modal({ open, title, description, onClose, children }: ModalProp
           <button
             type="button"
             onClick={onClose}
-            aria-label="Закрыть"
+            aria-label={t('modal.close')}
             className="rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
           >
             <X className="h-4 w-4" />

@@ -8,10 +8,12 @@ import { useWorkspaceData } from '../../hooks/useWorkspaceData.ts'
 import { useAuthStore } from '../../store/useAuthStore.ts'
 import { useAppStore } from '../../store/useAppStore.ts'
 import { cn } from '../../utils/cn.ts'
+import { useI18n } from '../../i18n/useI18n.ts'
 import { aiNav, isNavActive, mainNav, systemNav, type NavItem } from './navigation.ts'
 
 function NavLinks({ items, onNavigate }: { items: NavItem[]; onNavigate: () => void }) {
   const { pathname, hash } = useLocation()
+  const { t } = useI18n()
   return (
     <div className="space-y-0.5">
       {items.map((item) => {
@@ -19,7 +21,7 @@ function NavLinks({ items, onNavigate }: { items: NavItem[]; onNavigate: () => v
         const Icon = item.icon
         return (
           <Link
-            key={item.label}
+            key={item.labelKey}
             to={item.hash ? `${item.to}${item.hash}` : item.to}
             aria-current={active ? 'page' : undefined}
             onClick={onNavigate}
@@ -31,7 +33,7 @@ function NavLinks({ items, onNavigate }: { items: NavItem[]; onNavigate: () => v
             )}
           >
             <Icon className="h-4 w-4" />
-            {item.label}
+            {t(item.labelKey)}
           </Link>
         )
       })}
@@ -50,6 +52,9 @@ export function Sidebar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useOnOutside<HTMLDivElement>(menuOpen, () => setMenuOpen(false))
   const hidden = !desktop && !sidebarOpen
+  const { t, text } = useI18n()
+  const workspaceName = text(workspace.name)
+  const workspacePlan = text(workspace.plan)
 
   return (
     <aside
@@ -76,18 +81,18 @@ export function Sidebar() {
             className="flex w-full items-center gap-2 rounded-lg border border-zinc-200 px-2.5 py-2 text-left hover:bg-zinc-50"
           >
             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-zinc-100 text-xs font-semibold text-zinc-700">
-              {workspace.name.slice(0, 1)}
+              {workspaceName.slice(0, 1)}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-medium text-zinc-900">{workspace.name}</span>
-              <span className="block text-xs text-zinc-500">{workspace.plan}</span>
+              <span className="block truncate text-sm font-medium text-zinc-900">{workspaceName}</span>
+              <span className="block text-xs text-zinc-500">{workspacePlan}</span>
             </span>
             <ChevronsUpDown className="h-4 w-4 shrink-0 text-zinc-400" />
           </button>
           {menuOpen ? (
             <div
               role="listbox"
-              aria-label="Пространство"
+              aria-label={t('sidebar.workspace')}
               className="absolute right-0 left-0 z-20 mt-1 rounded-lg border border-zinc-200 bg-white p-1 shadow-lg"
             >
               {workspaces.map((item) => {
@@ -108,8 +113,8 @@ export function Sidebar() {
                     )}
                   >
                     <span>
-                      <span className="block font-medium">{item.name}</span>
-                      <span className="block text-xs text-zinc-500">{item.plan}</span>
+                      <span className="block font-medium">{text(item.name)}</span>
+                      <span className="block text-xs text-zinc-500">{text(item.plan)}</span>
                     </span>
                     {selected ? <Check className="h-4 w-4" /> : null}
                   </button>
@@ -135,8 +140,8 @@ export function Sidebar() {
         <div className="flex items-center gap-2.5 px-1">
           <Avatar user={currentUser} />
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-zinc-900">{currentUser.name}</p>
-            <p className="truncate text-xs text-zinc-500">{currentUser.role}</p>
+            <p className="truncate text-sm font-medium text-zinc-900">{text(currentUser.name)}</p>
+            <p className="truncate text-xs text-zinc-500">{text(currentUser.role)}</p>
           </div>
         </div>
         <Link
@@ -144,7 +149,7 @@ export function Sidebar() {
           onClick={() => setSidebarOpen(false)}
           className="mt-3 flex h-8 items-center justify-center rounded-lg border border-zinc-200 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
         >
-          Профиль
+          {t('sidebar.profile')}
         </Link>
         <button
           type="button"
@@ -155,7 +160,7 @@ export function Sidebar() {
           className="mt-2 flex h-8 w-full items-center justify-center gap-1.5 rounded-lg text-xs font-medium text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800"
         >
           <LogOut className="h-3.5 w-3.5" />
-          Выйти
+          {t('sidebar.logout')}
         </button>
       </div>
     </aside>

@@ -7,6 +7,8 @@ import { useAppStore } from '../../store/useAppStore.ts'
 import { formatRelative } from '../../utils/format.ts'
 import { Avatar } from '../ui/Avatar.tsx'
 import { Button } from '../ui/Button.tsx'
+import { useI18n } from '../../i18n/useI18n.ts'
+import { LanguageToggle } from './LanguageToggle.tsx'
 import { sectionMeta } from './navigation.ts'
 import { SearchField } from './SearchField.tsx'
 
@@ -21,6 +23,7 @@ export function Header() {
   const [notesOpen, setNotesOpen] = useState(false)
   const notesRef = useOnOutside<HTMLDivElement>(notesOpen, () => setNotesOpen(false))
   const unread = notifications.filter((item) => !item.read).length
+  const { locale, t, text } = useI18n()
 
   return (
     <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur">
@@ -29,31 +32,32 @@ export function Header() {
           <button
             type="button"
             className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 lg:hidden"
-            aria-label="Открыть меню"
+            aria-label={t('header.openMenu')}
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="h-4 w-4" />
           </button>
           <div className="min-w-0">
             <p className="truncate text-xs text-zinc-500">
-              {workspace.name}
+              {text(workspace.name)}
               <span className="px-1.5 text-zinc-300">/</span>
-              {meta.crumb}
+              {t(meta.crumbKey)}
             </p>
-            <h1 className="truncate text-sm font-semibold text-zinc-900 sm:text-base">{meta.title}</h1>
+            <h1 className="truncate text-sm font-semibold text-zinc-900 sm:text-base">{t(meta.titleKey)}</h1>
           </div>
         </div>
         <div className="flex w-full items-center gap-2 sm:w-auto">
           <SearchField className="min-w-0 flex-1 sm:w-64 sm:flex-none" />
           <Button onClick={openCreateTask} className="shrink-0">
             <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Новая задача</span>
-            <span className="sm:hidden">Новая</span>
+            <span className="hidden sm:inline">{t('header.newTask')}</span>
+            <span className="sm:hidden">{t('header.newShort')}</span>
           </Button>
+          <LanguageToggle />
           <div ref={notesRef} className="relative">
             <button
               type="button"
-              aria-label="Уведомления"
+              aria-label={t('header.notifications')}
               aria-expanded={notesOpen}
               onClick={() => {
                 setNotesOpen((open) => !open)
@@ -69,21 +73,21 @@ export function Header() {
             {notesOpen ? (
               <div className="absolute right-0 z-30 mt-2 w-80 rounded-xl border border-zinc-200 bg-white p-2 shadow-lg">
                 <p className="px-2 py-1.5 text-xs font-medium tracking-wide text-zinc-400 uppercase">
-                  Уведомления
+                  {t('header.notifications')}
                 </p>
                 <ul>
                   {notifications.map((item) => (
                     <li key={item.id} className="rounded-lg px-2 py-2 hover:bg-zinc-50">
-                      <p className="text-sm font-medium text-zinc-900">{item.title}</p>
-                      <p className="mt-0.5 text-xs text-zinc-500">{item.body}</p>
-                      <p className="mt-1 text-[11px] text-zinc-400">{formatRelative(item.timestamp)}</p>
+                      <p className="text-sm font-medium text-zinc-900">{text(item.title)}</p>
+                      <p className="mt-0.5 text-xs text-zinc-500">{text(item.body)}</p>
+                      <p className="mt-1 text-[11px] text-zinc-400">{formatRelative(item.timestamp, locale)}</p>
                     </li>
                   ))}
                 </ul>
               </div>
             ) : null}
           </div>
-          <Link to="/settings" aria-label="Открыть профиль" className="shrink-0 rounded-full">
+          <Link to="/settings" aria-label={t('header.openProfile')} className="shrink-0 rounded-full">
             <Avatar user={currentUser} />
           </Link>
         </div>

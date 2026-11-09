@@ -4,6 +4,8 @@ import { Card } from '../../components/ui/Card.tsx'
 import { PageHeader, PageShell } from '../../components/layout/PageHeader.tsx'
 import { TaskList } from '../../features/tasks/TaskList.tsx'
 import { useWorkspaceData } from '../../hooks/useWorkspaceData.ts'
+import { useI18n } from '../../i18n/useI18n.ts'
+import { statusLabel } from '../../i18n/labels.ts'
 import { useAppStore } from '../../store/useAppStore.ts'
 import { taskStatuses, type TaskStatus } from '../../types/index.ts'
 import { cn } from '../../utils/cn.ts'
@@ -14,6 +16,7 @@ type StatusFilter = 'All' | TaskStatus
 export function TasksPage() {
   const { tasks, currentUser, workspace } = useWorkspaceData()
   const compact = useAppStore((state) => state.preferences.compactLists)
+  const { locale, t, text } = useI18n()
   const [params] = useSearchParams()
   const highlightId = params.get('task') ?? undefined
   const [scope, setScope] = useState<'mine' | 'all'>('mine')
@@ -39,9 +42,9 @@ export function TasksPage() {
   return (
     <PageShell>
       <PageHeader
-        eyebrow={workspace.name}
-        title="Мои задачи"
-        description="Все назначения в этом пространстве. Смена статуса сохраняется в демо до обновления страницы."
+        eyebrow={text(workspace.name)}
+        title={t('nav.tasks')}
+        description={t('page.tasksDescription')}
       />
       <div className="flex flex-wrap items-center gap-2">
         {(['mine', 'all'] as const).map((item) => (
@@ -54,7 +57,7 @@ export function TasksPage() {
               scope === item ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-600 ring-1 ring-zinc-200',
             )}
           >
-            {item === 'mine' ? 'Мои' : 'Все задачи'}
+            {item === 'mine' ? t('page.tasksMine') : t('page.tasksAll')}
           </button>
         ))}
         <span className="mx-1 hidden h-4 w-px bg-zinc-200 sm:block" />
@@ -68,7 +71,7 @@ export function TasksPage() {
               status === item ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-600 ring-1 ring-zinc-200',
             )}
           >
-            {item === 'All' ? 'Все' : item}
+            {item === 'All' ? t('page.filterAll') : statusLabel(item, locale)}
           </button>
         ))}
       </div>
@@ -77,7 +80,7 @@ export function TasksPage() {
           tasks={visible}
           compact={compact}
           highlightId={highlightId}
-          empty="Нет задач по этому фильтру."
+          empty={t('page.tasksEmpty')}
         />
       </Card>
     </PageShell>

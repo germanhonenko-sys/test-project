@@ -1,3 +1,10 @@
+export type Locale = 'ru' | 'en'
+
+export interface Localized {
+  ru: string
+  en: string
+}
+
 export const taskStatuses = ['К выполнению', 'В работе', 'На проверке', 'Готово'] as const
 export type TaskStatus = (typeof taskStatuses)[number]
 
@@ -15,26 +22,26 @@ export type DocumentCategory = (typeof documentCategories)[number]
 
 export interface User {
   id: string
-  name: string
-  role: string
+  name: Localized
+  role: Localized
   email: string
-  initials: string
+  initials: Localized
   color: string
   workspaceIds: string[]
 }
 
 export interface Workspace {
   id: string
-  name: string
-  plan: string
-  projectDelta: string
+  name: Localized
+  plan: Localized
+  projectDelta: Localized
 }
 
 export interface Project {
   id: string
   workspaceId: string
-  name: string
-  description: string
+  name: Localized
+  description: Localized
   memberIds: string[]
   progress: number
   deadline: string
@@ -45,7 +52,7 @@ export interface Task {
   id: string
   workspaceId: string
   projectId: string
-  title: string
+  title: Localized
   assigneeId: string
   priority: TaskPriority
   status: TaskStatus
@@ -57,23 +64,23 @@ export interface Activity {
   workspaceId: string
   actorId: string
   kind: ActivityKind
-  message: string
+  message: Localized
   timestamp: string
 }
 
 export interface KnowledgeDocument {
   id: string
   workspaceId: string
-  name: string
+  name: Localized
   category: DocumentCategory
   updatedAt: string
-  size: string
+  size: Localized
 }
 
 export interface AppNotification {
   id: string
-  title: string
-  body: string
+  title: Localized
+  body: Localized
   timestamp: string
   read: boolean
 }
@@ -81,8 +88,8 @@ export interface AppNotification {
 export interface AiHistoryItem {
   id: string
   workspaceId: string
-  prompt: string
-  subtasks: string[]
+  prompt: Localized
+  subtasks: Localized[]
   createdAt: string
 }
 
@@ -106,5 +113,5 @@ export interface NewDocumentInput {
   workspaceId: string
   name: string
   category: DocumentCategory
-  size: string
+  size: Localized
 }

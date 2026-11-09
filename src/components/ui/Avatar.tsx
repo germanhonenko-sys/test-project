@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/useI18n.ts'
 import type { User } from '../../types/index.ts'
 import { cn } from '../../utils/cn.ts'
 
@@ -7,16 +8,17 @@ const sizes = {
 }
 
 export function Avatar({ user, size = 'md' }: { user: User; size?: 'sm' | 'md' }) {
+  const { text } = useI18n()
   return (
     <span
-      title={user.name}
+      title={text(user.name)}
       className={cn(
         'inline-flex shrink-0 items-center justify-center rounded-full font-medium text-white ring-2 ring-white',
         user.color,
         sizes[size],
       )}
     >
-      {user.initials}
+      {text(user.initials)}
     </span>
   )
 }

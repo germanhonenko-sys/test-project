@@ -2,6 +2,7 @@ import type { User as AuthUser } from '@supabase/supabase-js'
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase.ts'
 import type { User } from '../types/index.ts'
+import { both, loc } from '../i18n/text.ts'
 import {
   authErrorMessage,
   colorFromEmail,
@@ -9,6 +10,7 @@ import {
   isValidEmail,
   MIN_PASSWORD_LENGTH,
   normalizeEmail,
+  type AuthErrorCode,
 } from '../utils/auth.ts'
 import { useAppStore } from './useAppStore.ts'
 
@@ -17,8 +19,8 @@ type AuthStatus = 'loading' | 'ready'
 interface AuthState {
   status: AuthStatus
   sessionUserId: string | null
-  login: (email: string, password: string) => Promise<string | null>
-  register: (name: string, email: string, password: string) => Promise<string | null>
+  login: (email: string, password: string) => Promise<AuthErrorCode | null>
+  register: (name: string, email: string, password: string) => Promise<AuthErrorCode | null>
   logout: () => Promise<void>
   init: () => () => void
 }
@@ -26,18 +28,22 @@ interface AuthState {
 function userFromAuth(authUser: AuthUser): User {
   const email = normalizeEmail(authUser.email ?? '')
   const metaName = authUser.user_metadata?.name
-  const name =
-    typeof metaName === 'string' && metaName.trim()
-      ? metaName.trim()
-      : email.split('@')[0] || 'Пользователь'
+  const rawName = typeof metaName === 'string' ? metaName.trim() : ''
+  const fallback = email.split('@')[0]
+  const name = rawName
+    ? both(rawName)
+    : fallback
+      ? both(fallback)
+      : loc('Пользователь', 'User')
+  const initialsSource = rawName || fallback
   const workspaceId = useAppStore.getState().activeWorkspaceId
 
   return {
     id: authUser.id,
     name,
-    role: 'Участник',
+    role: loc('Участник', 'Member'),
     email,
-    initials: initialsFromName(name),
+    initials: initialsSource ? both(initialsFromName(initialsSource)) : loc('П', 'U'),
     color: colorFromEmail(email || authUser.id),
     workspaceIds: workspaceId ? [workspaceId] : [],
   }
@@ -65,10 +71,10 @@ function establishUser(authUser: AuthUser | null) {
 
 function validateCredentials(email: string, password: string) {
   const normalized = normalizeEmail(email)
-  if (!normalized || !password) return { normalized, error: 'Заполните почту и пароль.' }
-  if (!isValidEmail(normalized)) return { normalized, error: 'Укажите корректную почту.' }
+  if (!normalized || !password) return { normalized, error: 'fillCredentials' as const }
+  if (!isValidEmail(normalized)) return { normalized, error: 'invalidEmail' as const }
   if (password.length < MIN_PASSWORD_LENGTH) {
-    return { normalized, error: `Пароль должен быть не короче ${MIN_PASSWORD_LENGTH} символов.` }
+    return { normalized, error: 'passwordLength' as const }
   }
   return { normalized, error: null }
 }
@@ -85,14 +91,14 @@ export const useAuthStore = create<AuthState>((set) => ({
       password,
     })
     if (authError) return authErrorMessage(authError)
-    if (!data.session) return 'Не удалось войти. Попробуйте ещё раз.'
+    if (!data.session) return 'loginFailed'
 
     set({ sessionUserId: establishUser(data.session.user), status: 'ready' })
     return null
   },
   register: async (name, email, password) => {
     const trimmed = name.trim()
-    if (!trimmed) return 'Укажите имя.'
+    if (!trimmed) return 'enterName'
     const { normalized, error } = validateCredentials(email, password)
     if (error) return error
 
@@ -102,10 +108,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       options: { data: { name: trimmed } },
     })
     if (authError) return authErrorMessage(authError)
-    if (data.user && data.user.identities?.length === 0) return 'Эта почта уже зарегистрирована.'
-    if (!data.session) {
-      return 'Подтвердите почту по ссылке из письма. После подтверждения войдите — откроется главная.'
-    }
+    if (data.user && data.user.identities?.length === 0) return 'emailTaken'
+    if (!data.session) return 'confirmThenHome'
 
     set({ sessionUserId: establishUser(data.session.user), status: 'ready' })
     return null

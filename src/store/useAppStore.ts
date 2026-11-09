@@ -21,6 +21,8 @@ import type {
   User,
   Workspace,
 } from '../types/index.ts'
+import { statusLabel } from '../i18n/labels.ts'
+import { both, loc } from '../i18n/text.ts'
 import { DEFAULT_AI_PROMPT, generateSubtasks } from '../utils/ai.ts'
 
 function createId(prefix: string) {
@@ -63,7 +65,7 @@ function activityEntry(
   workspaceId: string,
   actorId: string,
   kind: ActivityKind,
-  message: string,
+  message: Activity['message'],
 ): Activity {
   return {
     id: createId('activity'),
@@ -108,8 +110,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   openCreateTask: () => set({ createTaskOpen: true }),
   closeCreateTask: () => set({ createTaskOpen: false }),
   addTask: (input) => {
-    const task: Task = { id: createId('task'), ...input }
-    const projectName = get().projects.find((project) => project.id === task.projectId)?.name ?? 'проект'
+    const task: Task = { id: createId('task'), ...input, title: both(input.title) }
+    const projectName =
+      get().projects.find((project) => project.id === task.projectId)?.name ?? loc('проект', 'project')
     set((state) => ({
       tasks: [task, ...state.tasks],
       activity: [
@@ -117,7 +120,10 @@ export const useAppStore = create<AppState>((set, get) => ({
           task.workspaceId,
           state.currentUserId,
           'created',
-          `новая задача «${task.title}» в проекте «${projectName}».`,
+          loc(
+            `новая задача «${task.title.ru}» в проекте «${projectName.ru}».`,
+            `new task “${task.title.en}” in project “${projectName.en}”.`,
+          ),
         ),
         ...state.activity,
       ],
@@ -136,8 +142,11 @@ export const useAppStore = create<AppState>((set, get) => ({
           state.currentUserId,
           done ? 'completed' : 'status',
           done
-            ? `задача «${current.title}» завершена.`
-            : `статус задачи «${current.title}» изменён на «${status}».`,
+            ? loc(`задача «${current.title.ru}» завершена.`, `task “${current.title.en}” completed.`)
+            : loc(
+                `статус задачи «${current.title.ru}» изменён на «${statusLabel(status, 'ru')}».`,
+                `task “${current.title.en}” status changed to “${statusLabel(status, 'en')}”.`,
+              ),
         ),
         ...state.activity,
       ],
@@ -146,6 +155,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   addDocument: (input) => {
     const document: KnowledgeDocument = {
       ...input,
+      name: both(input.name),
       id: createId('doc'),
       updatedAt: new Date().toISOString(),
     }
@@ -165,12 +175,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       notifications: state.notifications.map((item) => ({ ...item, read: true })),
     })),
   submitPrompt: (prompt) => {
-    const text = prompt.trim() || DEFAULT_AI_PROMPT
+    const trimmed = prompt.trim()
     const item: AiHistoryItem = {
       id: createId('ai'),
       workspaceId: get().activeWorkspaceId,
-      prompt: text,
-      subtasks: generateSubtasks(text),
+      prompt: trimmed ? both(trimmed) : DEFAULT_AI_PROMPT,
+      subtasks: generateSubtasks(trimmed || DEFAULT_AI_PROMPT.ru),
       createdAt: new Date().toISOString(),
     }
     set((state) => ({ aiHistory: [item, ...state.aiHistory].slice(0, 12) }))

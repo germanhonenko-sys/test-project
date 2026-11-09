@@ -5,8 +5,10 @@ import { StatGrid } from '../../features/dashboard/StatGrid.tsx'
 import { UpcomingTasks } from '../../features/dashboard/UpcomingTasks.tsx'
 import { AiComposer } from '../../features/ai-assistant/AiComposer.tsx'
 import { PageShell } from '../../components/layout/PageHeader.tsx'
+import { useI18n } from '../../i18n/useI18n.ts'
 
 export function DashboardPage() {
+  const { t } = useI18n()
   return (
     <PageShell>
       <DashboardHero />
@@ -18,10 +20,10 @@ export function DashboardPage() {
         </div>
         <div className="flex flex-col gap-6 xl:col-span-2">
           <AiComposer
-            title="Пусть AI разложит работу"
-            description="Сложные идеи превращаются в структурированные задачи, с ответственными и следующим шагом."
-            placeholder="Опишите, что нужно сделать..."
-            actionLabel="Сгенерировать задачи"
+            title={t('ai.composerTitle')}
+            description={t('ai.composerDescription')}
+            placeholder={t('ai.composerPlaceholder')}
+            actionLabel={t('ai.composerAction')}
           />
           <ActivityFeed />
         </div>
