@@ -47,9 +47,10 @@ export function useAuthForm() {
       setError('passwordMismatch')
       return
     }
+    const role = String(new FormData(event.currentTarget).get('role') ?? '')
     setPending(true)
     setError(null)
-    const message = await register(name, email, password)
+    const message = await register(name, email, password, role)
     setPending(false)
     if (message) {
       setError(message)

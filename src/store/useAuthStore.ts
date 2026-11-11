@@ -1,4 +1,6 @@
 import { create } from 'zustand'
+import { isTeamRole } from '../data/teamRoles.ts'
+import { ensureProfile } from '../lib/boards.ts'
 import { supabase } from '../lib/supabase.ts'
 import { authErrorMessage, type AuthErrorCode } from '../utils/auth.ts'
 import { establishUser, validateCredentials } from './authSession.ts'
@@ -9,7 +11,7 @@ interface AuthState {
   status: AuthStatus
   sessionUserId: string | null
   login: (email: string, password: string) => Promise<AuthErrorCode | null>
-  register: (name: string, email: string, password: string) => Promise<AuthErrorCode | null>
+  register: (name: string, email: string, password: string, role: string) => Promise<AuthErrorCode | null>
   logout: () => Promise<void>
   init: () => () => void
 }
@@ -31,20 +33,28 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ sessionUserId: establishUser(data.session.user), status: 'ready' })
     return null
   },
-  register: async (name, email, password) => {
+  register: async (name, email, password, role) => {
     const trimmed = name.trim()
     if (!trimmed) return 'enterName'
+    if (!isTeamRole(role)) return 'enterRole'
     const { normalized, error } = validateCredentials(email, password)
     if (error) return error
 
     const { data, error: authError } = await supabase.auth.signUp({
       email: normalized,
       password,
-      options: { data: { name: trimmed } },
+      options: { data: { name: trimmed, role } },
     })
     if (authError) return authErrorMessage(authError)
     if (data.user && data.user.identities?.length === 0) return 'emailTaken'
-    if (!data.session) return 'confirmThenHome'
+    if (!data.session || !data.user) return 'confirmThenHome'
+
+    await ensureProfile({
+      id: data.user.id,
+      email: normalized,
+      name: trimmed,
+      role,
+    })
 
     set({ sessionUserId: establishUser(data.session.user), status: 'ready' })
     return null

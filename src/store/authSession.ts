@@ -1,4 +1,5 @@
 import type { User as AuthUser } from '@supabase/supabase-js'
+import { teamRoleLabel } from '../data/teamRoles.ts'
 import { both, loc } from '../i18n/text.ts'
 import type { User } from '../types/index.ts'
 import {
@@ -18,11 +19,12 @@ export function userFromAuth(authUser: AuthUser): User {
   const name = rawName ? both(rawName) : fallback ? both(fallback) : loc('Пользователь', 'User')
   const initialsSource = rawName || fallback
   const workspaceId = useAppStore.getState().activeWorkspaceId
+  const metaRole = authUser.user_metadata?.role
 
   return {
     id: authUser.id,
     name,
-    role: loc('Участник', 'Member'),
+    role: teamRoleLabel(typeof metaRole === 'string' ? metaRole : ''),
     email,
     initials: initialsSource ? both(initialsFromName(initialsSource)) : loc('П', 'U'),
     color: colorFromEmail(email || authUser.id),
@@ -38,11 +40,14 @@ export function establishUser(authUser: AuthUser | null) {
 
   const user = userFromAuth(authUser)
   const { users } = useAppStore.getState()
-  if (!users.some((item) => item.id === user.id)) {
-    useAppStore.setState({
-      users: [...users.filter((item) => item.email.toLowerCase() !== user.email.toLowerCase()), user],
-    })
-  }
+  const withoutEmailDupes = users.filter(
+    (item) => item.id === user.id || item.email.toLowerCase() !== user.email.toLowerCase(),
+  )
+  useAppStore.setState({
+    users: withoutEmailDupes.some((item) => item.id === user.id)
+      ? withoutEmailDupes.map((item) => (item.id === user.id ? user : item))
+      : [...withoutEmailDupes, user],
+  })
   useAppStore.getState().setCurrentUserId(user.id)
   return user.id
 }

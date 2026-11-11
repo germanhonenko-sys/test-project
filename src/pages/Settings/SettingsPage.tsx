@@ -1,11 +1,15 @@
 import { useState } from 'react'
 import { Avatar } from '../../components/ui/Avatar.tsx'
 import { Card } from '../../components/ui/Card.tsx'
+import { Field, Select } from '../../components/ui/Input.tsx'
 import { Switch } from '../../components/ui/Switch.tsx'
+import { isTeamRole, teamRoleKey, teamRoleLabel, teamRoles, type TeamRole } from '../../data/teamRoles.ts'
 import { PageHeader, PageShell } from '../../components/layout/PageHeader.tsx'
 import { useWorkspaceData } from '../../hooks/useWorkspaceData.ts'
 import { useI18n } from '../../i18n/useI18n.ts'
 import type { MessageKey } from '../../i18n/translate.ts'
+import { saveProfileRole } from '../../lib/boards.ts'
+import { establishUser } from '../../store/authSession.ts'
 import { useAppStore } from '../../store/useAppStore.ts'
 import type { Preferences } from '../../types/index.ts'
 
@@ -32,7 +36,29 @@ export function SettingsPage() {
   const preferences = useAppStore((state) => state.preferences)
   const setPreference = useAppStore((state) => state.setPreference)
   const [themeNoted, setThemeNoted] = useState(false)
+  const [rolePending, setRolePending] = useState(false)
+  const [roleError, setRoleError] = useState(false)
   const { t, text } = useI18n()
+  const role = teamRoleKey(currentUser.role)
+
+  async function onRoleChange(nextRole: TeamRole) {
+    if (nextRole === role || rolePending) return
+    setRolePending(true)
+    setRoleError(false)
+    const result = await saveProfileRole(
+      { id: currentUser.id, email: currentUser.email, name: currentUser.name.ru, role },
+      nextRole,
+    )
+    setRolePending(false)
+    if (result.error || !result.user) {
+      setRoleError(true)
+      return
+    }
+    establishUser(result.user)
+    useAppStore.setState((state) => ({
+      profiles: state.profiles.map((item) => (item.id === currentUser.id ? { ...item, role: nextRole } : item)),
+    }))
+  }
 
   return (
     <PageShell>
@@ -49,6 +75,29 @@ export function SettingsPage() {
               <p className="text-sm font-semibold text-zinc-900">{text(currentUser.name)}</p>
               <p className="text-xs text-zinc-500">{text(currentUser.role)}</p>
             </div>
+          </div>
+          <div className="mt-5">
+            <Field label={t('auth.role')}>
+              <Select
+                value={role}
+                disabled={rolePending}
+                onChange={(event) => {
+                  if (isTeamRole(event.target.value)) void onRoleChange(event.target.value)
+                }}
+              >
+                <option value="">{t('auth.rolePlaceholder')}</option>
+                {teamRoles.map((item) => (
+                  <option key={item} value={item}>
+                    {text(teamRoleLabel(item))}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            {roleError ? (
+              <p role="alert" className="mt-2 text-sm text-rose-600">
+                {t('authError.generic')}
+              </p>
+            ) : null}
           </div>
           <dl className="mt-5 space-y-3 text-sm">
             <div>

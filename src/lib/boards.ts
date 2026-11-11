@@ -1,5 +1,7 @@
+import type { User as AuthUser } from '@supabase/supabase-js'
+import type { TeamRole } from '../data/teamRoles.ts'
 import { isTaskPriority, isTaskStatus } from '../utils/guards.ts'
-import type { Board, BoardTask, NewBoardInput, Profile, TaskStatus } from '../types/index.ts'
+import type { Board, BoardTask, BoardTaskDraft, NewBoardInput, NewBoardTaskInput, Profile, TaskStatus } from '../types/index.ts'
 import { supabase } from './supabase.ts'
 
 type TaskRow = {
@@ -49,8 +51,28 @@ export async function ensureProfile(profile: Profile) {
     id: profile.id,
     email: profile.email,
     name: profile.name,
+    ...(profile.role ? { role: profile.role } : {}),
   })
   return error
+}
+
+export async function saveProfileRole(profile: Profile, nextRole: TeamRole) {
+  const previousRole = profile.role
+  const profileError = await ensureProfile({ ...profile, role: nextRole })
+  if (profileError) return { error: profileError, user: null as AuthUser | null }
+
+  const { data, error } = await supabase.auth.updateUser({ data: { role: nextRole } })
+  if (error || !data.user) {
+    await supabase.from('profiles').upsert({
+      id: profile.id,
+      email: profile.email,
+      name: profile.name,
+      role: previousRole,
+    })
+    return { error: error ?? new Error('update failed'), user: null }
+  }
+
+  return { error: null, user: data.user }
 }
 
 export async function fetchBoards() {
@@ -60,8 +82,9 @@ export async function fetchBoards() {
       .select(
         'id, owner_id, name, description, board_members(user_id), tasks(id, board_id, title, status, assignee_id, priority, deadline)',
       )
-      .order('created_at', { ascending: false }),
-    supabase.from('profiles').select('id, email, name').order('name'),
+      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: true, referencedTable: 'tasks' }),
+    supabase.from('profiles').select('id, email, name, role').order('name'),
   ])
   if (boardsResult.error || profilesResult.error) return { error: boardsResult.error ?? profilesResult.error }
   const rows = (boardsResult.data ?? []) as BoardRow[]
@@ -118,6 +141,46 @@ export async function deleteBoard(boardId: string) {
 }
 
 export async function saveTaskStatus(taskId: string, status: TaskStatus) {
-  const { error } = await supabase.from('tasks').update({ status }).eq('id', taskId)
+  return saveBoardTask(taskId, { status })
+}
+
+export async function insertBoardTask(input: NewBoardTaskInput) {
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert({
+      board_id: input.boardId,
+      title: input.title,
+      status: input.status,
+      assignee_id: input.assigneeId,
+      priority: input.priority,
+      deadline: input.deadline,
+    })
+    .select('id, board_id, title, status, assignee_id, priority, deadline')
+    .single()
+  if (error || !data) return { error: error ?? new Error('insert failed'), task: null }
+  const task = mapTask(data)
+  if (!task) return { error: new Error('invalid task'), task: null }
+  return { error: null, task }
+}
+
+export async function saveBoardTask(taskId: string, patch: Partial<BoardTaskDraft>) {
+  const row: {
+    title?: string
+    status?: TaskStatus
+    assignee_id?: string | null
+    priority?: BoardTaskDraft['priority']
+    deadline?: string | null
+  } = {}
+  if (patch.title !== undefined) row.title = patch.title
+  if (patch.status !== undefined) row.status = patch.status
+  if (patch.assigneeId !== undefined) row.assignee_id = patch.assigneeId
+  if (patch.priority !== undefined) row.priority = patch.priority
+  if (patch.deadline !== undefined) row.deadline = patch.deadline
+  const { error } = await supabase.from('tasks').update(row).eq('id', taskId)
+  return error
+}
+
+export async function deleteBoardTask(taskId: string) {
+  const { error } = await supabase.from('tasks').delete().eq('id', taskId)
   return error
 }

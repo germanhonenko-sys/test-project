@@ -32,6 +32,7 @@ function StatusColumn({
   onDragLeave,
   onDrop,
   onDragEnd,
+  onStatusChange,
 }: {
   status: TaskStatus
   tasks: BoardTask[]
@@ -43,6 +44,7 @@ function StatusColumn({
   onDragLeave: () => void
   onDrop: (taskId: string) => void
   onDragEnd: () => void
+  onStatusChange: (taskId: string, status: TaskStatus) => void
 }) {
   const { locale, t } = useI18n()
 
@@ -88,6 +90,7 @@ function StatusColumn({
               onEdit={() => onEdit(task)}
               onDelete={() => onDelete(task)}
               onDragEnd={onDragEnd}
+              onStatusChange={(next) => onStatusChange(task.id, next)}
             />
           ))}
         </ul>
@@ -113,6 +116,7 @@ export function BoardViewPage() {
   const [taskDraft, setTaskDraft] = useState<{ status: TaskStatus; task: BoardTask | null } | null>(null)
   const [deletingTask, setDeletingTask] = useState<BoardTask | null>(null)
   const [dropStatus, setDropStatus] = useState<TaskStatus | null>(null)
+  const [taskError, setTaskError] = useState(false)
   useBoards()
 
   if (!board) {
@@ -158,6 +162,11 @@ export function BoardViewPage() {
         }
       />
       <AvatarGroup users={members} />
+      {taskError ? (
+        <p role="alert" className="text-sm text-rose-600">
+          {t('board.taskSaveFailed')}
+        </p>
+      ) : null}
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {taskStatuses.map((status) => (
           <StatusColumn
@@ -171,10 +180,13 @@ export function BoardViewPage() {
             onDragOver={() => setDropStatus(status)}
             onDragLeave={() => setDropStatus((current) => (current === status ? null : current))}
             onDrop={(taskId) => {
-              updateBoardTask(taskId, { status })
               setDropStatus(null)
+              void updateBoardTask(taskId, { status }).then((saved) => setTaskError(!saved))
             }}
             onDragEnd={() => setDropStatus(null)}
+            onStatusChange={(taskId, next) => {
+              void updateBoardTask(taskId, { status: next }).then((saved) => setTaskError(!saved))
+            }}
           />
         ))}
       </div>

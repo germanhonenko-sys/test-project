@@ -35,17 +35,20 @@ function BoardTaskForm({
   const [assigneeId, setAssigneeId] = useState(task?.assigneeId ?? '')
   const [deadline, setDeadline] = useState(dateInputValue(task?.deadline ?? null))
   const [error, setError] = useState(false)
+  const [saveError, setSaveError] = useState(false)
+  const [pending, setPending] = useState(false)
   const { locale, t, text } = useI18n()
   const extraAssignee =
     assigneeId && !members.some((member) => member.id === assigneeId)
       ? profiles.map(profileAsUser).find((user) => user.id === assigneeId)
       : undefined
 
-  function onSubmit(event: FormEvent) {
+  async function onSubmit(event: FormEvent) {
     event.preventDefault()
     const trimmed = title.trim()
     if (!trimmed) {
       setError(true)
+      setSaveError(false)
       return
     }
     const draft = {
@@ -55,8 +58,16 @@ function BoardTaskForm({
       deadline: deadline ? toStoredDate(deadline) : null,
       status: task?.status ?? status,
     }
-    if (task) updateBoardTask(task.id, draft)
-    else addBoardTask({ ...draft, boardId, status })
+    setPending(true)
+    setSaveError(false)
+    const saved = task
+      ? await updateBoardTask(task.id, draft)
+      : await addBoardTask({ ...draft, boardId, status })
+    setPending(false)
+    if (!saved) {
+      setSaveError(true)
+      return
+    }
     onClose()
   }
 
@@ -107,11 +118,18 @@ function BoardTaskForm({
           {t('create.titleRequired')}
         </p>
       ) : null}
+      {saveError ? (
+        <p role="alert" className="text-sm text-rose-600">
+          {t('board.taskSaveFailed')}
+        </p>
+      ) : null}
       <div className="flex justify-end gap-2">
-        <Button variant="secondary" onClick={onClose}>
+        <Button variant="secondary" onClick={onClose} disabled={pending}>
           {t('create.cancel')}
         </Button>
-        <Button type="submit">{task ? t('board.save') : t('create.submit')}</Button>
+        <Button type="submit" disabled={pending}>
+          {task ? t('board.save') : t('create.submit')}
+        </Button>
       </div>
     </form>
   )

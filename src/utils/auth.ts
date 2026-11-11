@@ -52,6 +52,7 @@ export type AuthErrorCode =
   | 'rateLimit'
   | 'generic'
   | 'enterName'
+  | 'enterRole'
   | 'loginFailed'
   | 'confirmThenHome'
   | 'passwordMismatch'

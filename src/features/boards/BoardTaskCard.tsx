@@ -5,7 +5,7 @@ import { Badge } from '../../components/ui/Badge.tsx'
 import { useI18n } from '../../i18n/useI18n.ts'
 import { priorityLabel, statusLabel } from '../../i18n/labels.ts'
 import { useAppStore } from '../../store/useAppStore.ts'
-import { taskStatuses, type BoardTask, type TaskPriority } from '../../types/index.ts'
+import { taskStatuses, type BoardTask, type TaskPriority, type TaskStatus } from '../../types/index.ts'
 import { cn } from '../../utils/cn.ts'
 import { formatDeadline, isOverdue } from '../../utils/format.ts'
 import { isTaskStatus } from '../../utils/guards.ts'
@@ -32,14 +32,15 @@ export function BoardTaskCard({
   onEdit,
   onDelete,
   onDragEnd,
+  onStatusChange,
 }: {
   task: BoardTask
   onEdit: () => void
   onDelete: () => void
   onDragEnd: () => void
+  onStatusChange: (status: TaskStatus) => void
 }) {
   const profiles = useAppStore((state) => state.profiles)
-  const updateBoardTask = useAppStore((state) => state.updateBoardTask)
   const { locale, t, text } = useI18n()
   const allowDrag = useRef(false)
   const [dragging, setDragging] = useState(false)
@@ -121,7 +122,7 @@ export function BoardTaskCard({
           value={task.status}
           aria-label={t('task.statusOf', { title: task.title })}
           onChange={(event) => {
-            if (isTaskStatus(event.target.value)) updateBoardTask(task.id, { status: event.target.value })
+            if (isTaskStatus(event.target.value)) onStatusChange(event.target.value)
           }}
           className={cn(
             'h-7 rounded-full px-2 text-xs font-medium outline-none focus:ring-2 focus:ring-indigo-500/30',

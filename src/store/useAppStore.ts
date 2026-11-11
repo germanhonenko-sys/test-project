@@ -6,7 +6,16 @@ import { mockProjects } from '../data/mockProjects.ts'
 import { mockTasks } from '../data/mockTasks.ts'
 import { mockUsers } from '../data/mockUsers.ts'
 import { mockWorkspaces } from '../data/mockWorkspaces.ts'
-import { deleteBoard, ensureProfile, fetchBoards, insertBoard, saveBoard, saveTaskStatus } from '../lib/boards.ts'
+import {
+  deleteBoard,
+  deleteBoardTask,
+  ensureProfile,
+  fetchBoards,
+  insertBoard,
+  insertBoardTask,
+  saveBoard,
+  saveBoardTask,
+} from '../lib/boards.ts'
 import type {
   Activity,
   AiHistoryItem,
@@ -27,6 +36,7 @@ import type {
   User,
   Workspace,
 } from '../types/index.ts'
+import { teamRoleKey } from '../data/teamRoles.ts'
 import { both, loc } from '../i18n/text.ts'
 import { DEFAULT_AI_PROMPT, generateSubtasks } from '../utils/ai.ts'
 import { createId, taskCreatedActivity, taskStatusActivity } from './activity.ts'
@@ -62,9 +72,9 @@ interface AppState {
   updateBoard: (boardId: string, input: NewBoardInput) => Promise<boolean>
   removeBoard: (boardId: string) => Promise<boolean>
   setBoardTaskStatus: (taskId: string, status: TaskStatus) => Promise<void>
-  addBoardTask: (input: NewBoardTaskInput) => void
-  updateBoardTask: (taskId: string, patch: Partial<BoardTaskDraft>) => void
-  removeBoardTask: (taskId: string) => void
+  addBoardTask: (input: NewBoardTaskInput) => Promise<boolean>
+  updateBoardTask: (taskId: string, patch: Partial<BoardTaskDraft>) => Promise<boolean>
+  removeBoardTask: (taskId: string) => Promise<boolean>
   setTaskStatus: (taskId: string, status: TaskStatus) => void
   addDocument: (input: NewDocumentInput) => void
   toggleTelegram: (workspaceId: string) => void
@@ -139,7 +149,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ boardsStatus: 'loading' })
     try {
       if (user) {
-        const profileError = await ensureProfile({ id: user.id, email: user.email, name: user.name.ru })
+        const profileError = await ensureProfile({
+          id: user.id,
+          email: user.email,
+          name: user.name.ru,
+          role: teamRoleKey(user.role),
+        })
         if (profileError) {
           set({ boardsStatus: 'error' })
           return
@@ -189,31 +204,52 @@ export const useAppStore = create<AppState>((set, get) => ({
     }))
     return true
   },
-  addBoardTask: (input) => {
-    const task: BoardTask = { id: createId('board-task'), ...input }
+  addBoardTask: async (input) => {
+    const { error, task } = await insertBoardTask(input)
+    if (error || !task) return false
     set((state) => ({ boardTasks: [...state.boardTasks, task] }))
+    return true
   },
-  updateBoardTask: (taskId, patch) => {
+  updateBoardTask: async (taskId, patch) => {
+    const current = get().boardTasks.find((task) => task.id === taskId)
+    if (!current) return false
+    const next = { ...current, ...patch }
+    if (
+      next.title === current.title &&
+      next.status === current.status &&
+      next.assigneeId === current.assigneeId &&
+      next.priority === current.priority &&
+      next.deadline === current.deadline
+    ) {
+      return true
+    }
     set((state) => ({
-      boardTasks: state.boardTasks.map((task) => (task.id === taskId ? { ...task, ...patch } : task)),
+      boardTasks: state.boardTasks.map((task) => (task.id === taskId ? next : task)),
     }))
+    const error = await saveBoardTask(taskId, patch)
+    if (!error) return true
+    set((state) => ({
+      boardTasks: state.boardTasks.map((task) => (task.id === taskId ? current : task)),
+    }))
+    return false
   },
-  removeBoardTask: (taskId) => {
+  removeBoardTask: async (taskId) => {
+    const tasks = get().boardTasks
+    const index = tasks.findIndex((task) => task.id === taskId)
+    const current = index === -1 ? undefined : tasks[index]
+    if (!current) return false
     set((state) => ({ boardTasks: state.boardTasks.filter((task) => task.id !== taskId) }))
+    const error = await deleteBoardTask(taskId)
+    if (!error) return true
+    set((state) => {
+      const restored = [...state.boardTasks]
+      restored.splice(Math.min(index, restored.length), 0, current)
+      return { boardTasks: restored }
+    })
+    return false
   },
   setBoardTaskStatus: async (taskId, status) => {
-    const current = get().boardTasks.find((task) => task.id === taskId)
-    if (!current || current.status === status) return
-    set((state) => ({
-      boardTasks: state.boardTasks.map((task) => (task.id === taskId ? { ...task, status } : task)),
-    }))
-    const error = await saveTaskStatus(taskId, status)
-    if (!error) return
-    set((state) => ({
-      boardTasks: state.boardTasks.map((task) =>
-        task.id === taskId ? { ...task, status: current.status } : task,
-      ),
-    }))
+    await get().updateBoardTask(taskId, { status })
   },
   setTaskStatus: (taskId, status) => {
     const current = get().tasks.find((task) => task.id === taskId)
